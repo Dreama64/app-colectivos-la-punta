@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Secoll",
+    "slug": "colectivo-link",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.tulinea.radio",
+      "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "INTERNET",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "La app necesita el micrófono para funcionar como radio Walkie-Talkie."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "06068828-fbb2-46d5-993a-997502046d26"
+      }
+    }
+  }
+}
