@@ -188,7 +188,7 @@ export default function App() {
   };
 
   const conectarWebSocket = (nombreIdentificador) => {
-    ws.current = new WebSocket('wss://servidor-colectivos.onrender.com');
+    ws.current = new WebSocket('wss://servidor-colectivos-la-punta.onrender.com');
 
     ws.current.onopen = () => {
       actualizarUI('📻 CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
@@ -416,7 +416,7 @@ export default function App() {
         type: 'audio/m4a',
       });
 
-      await fetch('https://servidor-colectivos.onrender.com/upload', {
+      await fetch('https://servidor-colectivos-la-punta.onrender.com/upload', {
         method: 'POST',
         body: formData,
         headers: {
@@ -501,7 +501,7 @@ export default function App() {
         });
       }
 
-      await fetch('https://servidor-colectivos.onrender.com/report', {
+      await fetch('https://servidor-colectivos-la-punta.onrender.com/report', {
         method: 'POST',
         body: formData,
         headers: {
