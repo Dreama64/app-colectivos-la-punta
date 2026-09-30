@@ -551,7 +551,7 @@ export default function App() {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
         <View style={styles.tarjetaCentrada}>
-          <Text style={styles.brandTitleText}>Secoll Communications</Text>
+          <Text style={styles.brandTitleText}>Colectivos La Punta</Text>
           <Text style={styles.subtituloBienvenida}>Sistema Operativo para Control de Terreno</Text>
 
           <TouchableOpacity 
@@ -746,7 +746,7 @@ export default function App() {
         >
           <View style={styles.headerDisplay}>
             <View style={styles.headerFilaSuperior}>
-              <Text style={styles.brandText}>Secoll Chat • {canalActivo}</Text>
+              <Text style={styles.brandText}>Colectivos La Punta Chat • {canalActivo}</Text>
               <TouchableOpacity onPress={() => setPantallaActual('hub')} style={styles.areaEngranaje}>
                 <Text style={styles.textoEngranaje}>🏠</Text>
               </TouchableOpacity>
@@ -847,7 +847,7 @@ export default function App() {
 
           <View style={styles.seccionInfo}>
             <Text style={styles.textoInfoLabel}>Versión del Sistema</Text>
-            <Text style={styles.textoInfoValor}>Secoll v1.2 Enterprise</Text>
+            <Text style={styles.textoInfoValor}>Colectivos La Punta v1.0</Text>
           </View>
 
           <View style={styles.seccionInfo}>
@@ -877,7 +877,7 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <View style={styles.headerDisplay}>
           <View style={styles.headerFilaSuperior}>
-            <Text style={styles.brandText}>Secoll v1.2 • {canalActivo}</Text>
+            <Text style={styles.brandText}>Colectivos La Punta • {canalActivo}</Text>
             <TouchableOpacity onPress={() => setPantallaActual('hub')} style={styles.areaEngranaje}>
               <Text style={styles.textoEngranaje}>🏠</Text>
             </TouchableOpacity>
@@ -939,7 +939,7 @@ export default function App() {
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Mantén presionado para hablar • Secoll Communications</Text>
+          <Text style={styles.footerText}>Mantén presionado para hablar • Colectivos La Punta</Text>
         </View>
       </SafeAreaView>
     );
@@ -949,7 +949,7 @@ export default function App() {
   return (
     <View style={[styles.container, styles.centradoTotal]}>
       <Text style={[styles.brandTitleText, { marginBottom: 10, fontSize: 26 }]}>
-        Secoll Communications
+        Colectivos La Punta
       </Text>
       <Text style={{ color: '#a4b0be', fontSize: 13, marginBottom: 30, letterSpacing: 1, textAlign: 'center' }}>
         SISTEMA OPERATIVO DE CONTROL Y TERRENO
