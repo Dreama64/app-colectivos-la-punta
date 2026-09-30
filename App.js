@@ -314,7 +314,7 @@ export default function App() {
         playsInSilentModeIOS: true,
         playThroughEarpieceAndroid: false,
         shouldDuckAndroid: false,
-        staysActiveInBackground: false
+        staysActiveInBackground: true
       });
 
       await descargarSound();
@@ -353,7 +353,7 @@ export default function App() {
         playsInSilentModeIOS: true,
         playThroughEarpieceAndroid: false,
         shouldDuckAndroid: false,
-        staysActiveInBackground: false
+        staysActiveInBackground: true
       });
 
       const opcionesGrabacion = {
@@ -977,24 +977,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tarjetaCentrada: {
-    width: '100%',
-    backgroundColor: '#1c2029',
+    width: "100%",
+    backgroundColor: "#16181a",
     borderRadius: 20,
     padding: 22,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2d3446',
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FACC15",
+    shadowColor: "#FACC15",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
     elevation: 5,
     marginTop: 'auto',
     marginBottom: 'auto',
   },
   headerDisplay: {
-    width: '100%',
-    backgroundColor: '#1c2029',
+    width: "100%",
+    backgroundColor: "#16181a",
     borderRadius: 16,
     padding: 15,
-    borderWidth: 1,
-    borderColor: '#2d3446',
+    borderWidth: 2,
+    borderColor: "#FACC15",
     alignItems: 'center',
   },
   headerFilaSuperior: {
@@ -1010,7 +1014,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   choferTag: {
-    color: '#2ed573',
+    color: "#FACC15",
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 5,
@@ -1024,8 +1028,8 @@ const styles = StyleSheet.create({
   },
   brandTitleText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#FACC15",
     marginBottom: 5,
     letterSpacing: 1,
   },
@@ -1176,8 +1180,8 @@ const styles = StyleSheet.create({
   },
   textoInfoValorNombre: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2ed573',
+    fontWeight: "bold",
+    color: "#FACC15",
     marginTop: 5,
     marginBottom: 10,
   },
@@ -1223,15 +1227,17 @@ const styles = StyleSheet.create({
     borderColor: '#2ed573',
   },
   botonHubMenu: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e2432',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#16181a",
     borderWidth: 1,
-    borderColor: '#2d3446', 
-    borderRadius: 16,
-    padding: 12,
-    justifyContent: 'center',
+    borderColor: "#2a2e33",
+    borderLeftWidth: 6,
+    borderLeftColor: "#FACC15",
+    borderRadius: 14,
+    padding: 14,
+    justifyContent: "flex-start",
   },
   iconoHubMenu: {
     fontSize: 26,
@@ -1243,8 +1249,8 @@ const styles = StyleSheet.create({
   },
   tituloBotonHub: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#FACC15",
   },
   descripcionBotonHub: {
     fontSize: 12,
@@ -1274,25 +1280,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   botonVerde: {
-    width: '100%',
-    backgroundColor: '#2ed573',
+    backgroundColor: "#FACC15",
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     height: 48,
   },
   textoBotonVerde: {
-    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#000000",
     fontSize: 15,
     fontWeight: 'bold',
   },
   botonVolver: {
-    width: '100%',
-    height: 48,
-    backgroundColor: '#2d3446',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    paddingVertical: 14,
+    backgroundColor: "#1c1e22",
+    borderWidth: 1,
+    borderColor: "#2e343d",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
   textoBotonVolver: {
     color: '#ffffff',
