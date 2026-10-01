@@ -63,10 +63,10 @@ export default function App() {
   }, [canalActivo]);
 
   useEffect(() => {
-    // ⏱️ Ajuste de tiempo del Splash inicial a 4 segundos
+    // ⏱️ Ajuste de tiempo del Splash inicial a 5 segundos
     const timer = setTimeout(() => {
       comprobarUsuario();
-    }, 4000); 
+    }, 5000);
     
     configurarAudioInicial();
 
@@ -187,7 +187,31 @@ export default function App() {
     }
   };
 
+  const salirDelCanal = () => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
+        type: 'leave_channel',
+        emisor: nombreUsuarioCompleto,
+        sala: canalActivoRef.current
+      }));
+    }
+
+    setConnectedUsers([]);
+    setShowUsersPanel(false);
+    setPantallaActual('hub');
+  };
+
   const conectarWebSocket = (nombreIdentificador) => {
+
+        // Evitar conexiones WebSocket duplicadas
+    if (
+      ws.current &&
+      (ws.current.readyState === WebSocket.OPEN ||
+       ws.current.readyState === WebSocket.CONNECTING)
+    ) {
+      console.log('WebSocket ya activo o conectando. Se evita conexión duplicada.');
+      return;
+    }
     ws.current = new WebSocket('wss://servidor-colectivos-la-punta.onrender.com');
 
     ws.current.onopen = () => {
@@ -747,7 +771,7 @@ export default function App() {
           <View style={styles.headerDisplay}>
             <View style={styles.headerFilaSuperior}>
               <Text style={styles.brandText}>Colectivos La Punta Chat • {canalActivo}</Text>
-              <TouchableOpacity onPress={() => setPantallaActual('hub')} style={styles.areaEngranaje}>
+              <TouchableOpacity onPress={salirDelCanal} style={styles.areaEngranaje}>
                 <Text style={styles.textoEngranaje}>🏠</Text>
               </TouchableOpacity>
             </View>
@@ -878,7 +902,7 @@ export default function App() {
         <View style={styles.headerDisplay}>
           <View style={styles.headerFilaSuperior}>
             <Text style={styles.brandText}>Colectivos La Punta • {canalActivo}</Text>
-            <TouchableOpacity onPress={() => setPantallaActual('hub')} style={styles.areaEngranaje}>
+            <TouchableOpacity onPress={salirDelCanal} style={styles.areaEngranaje}>
               <Text style={styles.textoEngranaje}>🏠</Text>
             </TouchableOpacity>
           </View>
@@ -945,7 +969,7 @@ export default function App() {
     );
   }
 
-  // 🚀 PANTALLA DE CARGA / SPLASH MEJORADA (4 SEGUNDOS)
+  // 🚀 PANTALLA DE CARGA / SPLASH MEJORADA (5 SEGUNDOS)
   return (
     <View style={[styles.container, styles.centradoTotal]}>
       <Text style={[styles.brandTitleText, { marginBottom: 10, fontSize: 26 }]}>
