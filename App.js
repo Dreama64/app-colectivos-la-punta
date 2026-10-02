@@ -770,75 +770,123 @@ export default function App() {
     const fechaHoraActual = new Date().toLocaleString('es-CL');
 
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView style={{ width: '100%' }} contentContainerStyle={{ paddingBottom: 20 }}>
-          <View style={styles.headerDisplay}>
-            <View style={styles.headerFilaSuperior}>
-              <Text style={styles.brandText}>🚨 Registro de Novedades</Text>
-              <TouchableOpacity onPress={() => setPantallaActual('hub')} style={styles.areaEngranaje}>
-                <Text style={styles.textoEngranaje}>🏠</Text>
-              </TouchableOpacity>
+      <SafeAreaView style={styles.reporteScreen}>
+        <ScrollView
+          style={styles.reporteScroll}
+          contentContainerStyle={styles.reporteScrollContenido}
+          showsVerticalScrollIndicator={false}>
+
+          <View style={styles.reporteHeader}>
+            <View>
+              <Text style={styles.reporteEyebrow}>COLECTIVOS LA PUNTA</Text>
+              <Text style={styles.reporteBrand}>Registro de novedades</Text>
             </View>
-            <Text style={styles.choferTag}>Emisor: {nombreUsuarioCompleto}</Text>
+
+            <TouchableOpacity
+              style={styles.reporteSalir}
+              activeOpacity={0.7}
+              onPress={() => setPantallaActual('hub')}>
+              <Text style={styles.reporteSalirTexto}>SALIR</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={[styles.tarjetaCentrada, { marginTop: 15 }]}>
-            <Text style={[styles.tituloConfig, { marginBottom: 15, fontSize: 18 }]}>Módulo de Reporte</Text>
+          <View style={styles.reporteDivider} />
 
-            <View style={{ width: '100%', marginBottom: 12 }}>
-              <Text style={{ color: '#a4b0be', fontSize: 12, marginBottom: 4 }}>Fecha y Hora Automática:</Text>
-              <TextInput style={styles.inputDisabled} value={fechaHoraActual} editable={false} />
+          <View style={styles.reporteIntro}>
+            <View style={styles.reporteTipoBadge}>
+              <View style={styles.reporteTipoDot} />
+              <Text style={styles.reporteTipoTexto}>INCIDENCIA</Text>
             </View>
+            <Text style={styles.reporteTitulo}>Nuevo reporte</Text>
+            <Text style={styles.reporteDescripcion}>
+              Registra una novedad de terreno y adjunta evidencia si corresponde.
+            </Text>
+          </View>
 
-            <View style={{ width: '100%', marginBottom: 12 }}>
-              <Text style={{ color: '#a4b0be', fontSize: 12, marginBottom: 4 }}>Detalle de la Incidencia / Novedad:</Text>
-              <TextInput 
-                style={[styles.entradaTexto, { height: 90, borderRadius: 12, paddingTop: 10, textAlignVertical: 'top' }]}
-                placeholder="Escriba lo ocurrido..."
-                placeholderTextColor="#666"
-                multiline={true}
-                value={reportDescription}
-                onChangeText={setReportDescription}
-              />
+          <View style={styles.reporteMetaCard}>
+            <View style={styles.reporteMetaFila}>
+              <View style={styles.reporteMetaBloque}>
+                <Text style={styles.reporteMetaLabel}>OPERADOR</Text>
+                <Text style={styles.reporteMetaValor}>{nombreUsuarioCompleto}</Text>
+              </View>
             </View>
+            <View style={styles.reporteMetaSeparador} />
+            <View style={styles.reporteMetaBloque}>
+              <Text style={styles.reporteMetaLabel}>FECHA Y HORA</Text>
+              <Text style={styles.reporteMetaValor}>{fechaHoraActual}</Text>
+            </View>
+          </View>
 
-            <TouchableOpacity 
-              style={[styles.botonHubMenu, { marginBottom: 15, justifyContent: 'center' }]} 
-              onPress={tomarOSeleccionarFoto}
-            >
-              <Text style={{ fontSize: 18, marginRight: 8 }}>📷</Text>
-              <Text style={{ color: '#38bdf8', fontWeight: 'bold' }}>
-                {reportImageUri ? 'Cambiar fotografía' : 'Tomar foto o subir desde galería'}
-              </Text>
+          <View style={styles.reporteFormulario}>
+            <Text style={styles.reporteCampoLabel}>DETALLE DE LA INCIDENCIA</Text>
+            <TextInput
+              style={styles.reporteInputDetalle}
+              placeholder="Describe brevemente lo ocurrido..."
+              placeholderTextColor="#656d78"
+              multiline={true}
+              textAlignVertical="top"
+              value={reportDescription}
+              onChangeText={setReportDescription}
+            />
+
+            <Text style={styles.reporteCampoLabel}>EVIDENCIA FOTOGRÁFICA</Text>
+            <TouchableOpacity
+              style={styles.reporteFotoBoton}
+              activeOpacity={0.8}
+              onPress={tomarOSeleccionarFoto}>
+              <View style={styles.reporteFotoMarca}>
+                <Text style={styles.reporteFotoMarcaTexto}>+</Text>
+              </View>
+              <View style={styles.reporteFotoInfo}>
+                <Text style={styles.reporteFotoTitulo}>
+                  {reportImageUri ? 'Cambiar fotografía' : 'Agregar fotografía'}
+                </Text>
+                <Text style={styles.reporteFotoSubtitulo}>
+                  {reportImageUri ? 'Evidencia adjunta al reporte' : 'Cámara o galería del dispositivo'}
+                </Text>
+              </View>
+              <Text style={styles.reporteFotoFlecha}>›</Text>
             </TouchableOpacity>
 
             {reportImageUri && (
-              <Image source={{ uri: reportImageUri }} style={styles.imagenPreviaReporte} />
+              <View style={styles.reportePreviewContenedor}>
+                <Image source={{ uri: reportImageUri }} style={styles.imagenPreviaReporte} />
+                <View style={styles.reporteAdjuntoBadge}>
+                  <View style={styles.reporteAdjuntoDot} />
+                  <Text style={styles.reporteAdjuntoTexto}>EVIDENCIA ADJUNTA</Text>
+                </View>
+              </View>
             )}
-
-            <TouchableOpacity 
-              style={[styles.botonVerde, { backgroundColor: '#d97706', height: 48, borderRadius: 12, marginTop: 10 }]} 
-              onPress={enviarReporteIncidencia}
-              disabled={isSubmittingReport}
-            >
-              {isSubmittingReport ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.textoBotonVerde}>ENVIAR REPORTE</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.botonVolver, { marginTop: 12, height: 44, borderRadius: 12 }]} 
-              onPress={() => setPantallaActual('hub')}
-            >
-              <Text style={styles.textoBotonVolver}>Cancelar / Volver</Text>
-            </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={[styles.reporteEnviar, isSubmittingReport && styles.reporteEnviarDeshabilitado]}
+            activeOpacity={0.8}
+            onPress={enviarReporteIncidencia}
+            disabled={isSubmittingReport}>
+            {isSubmittingReport ? (
+              <ActivityIndicator color="#11141a" />
+            ) : (
+              <>
+                <Text style={styles.reporteEnviarTexto}>REGISTRAR REPORTE</Text>
+                <Text style={styles.reporteEnviarFlecha}>›</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.reporteCancelar}
+            activeOpacity={0.7}
+            onPress={() => setPantallaActual('hub')}>
+            <Text style={styles.reporteCancelarTexto}>Cancelar y volver al panel</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.reporteFooter}>LA PUNTA · REGISTRO DE TERRENO</Text>
         </ScrollView>
       </SafeAreaView>
     );
   }
+
 
   // 💬 PANTALLA 5: CHAT DE TEXTO
   if (pantallaActual === 'chat') {
@@ -1589,6 +1637,285 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  /* ===== REGISTRO DE NOVEDADES ===== */
+  reporteScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+  },
+  reporteScroll: {
+    flex: 1,
+    width: "100%",
+  },
+  reporteScrollContenido: {
+    paddingHorizontal: 22,
+    paddingBottom: 34,
+  },
+  reporteHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  reporteEyebrow: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  reporteBrand: {
+    color: "#FACC15",
+    fontSize: 21,
+    fontWeight: "900",
+  },
+  reporteSalir: {
+    borderWidth: 1,
+    borderColor: "#343a43",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  reporteSalirTexto: {
+    color: "#aab0b9",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  reporteDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 18,
+  },
+  reporteIntro: {
+    width: "100%",
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  reporteTipoBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#211b15",
+    borderWidth: 1,
+    borderColor: "#49331d",
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 13,
+  },
+  reporteTipoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#f59e0b",
+    marginRight: 7,
+  },
+  reporteTipoTexto: {
+    color: "#f59e0b",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+  reporteTitulo: {
+    color: "#ffffff",
+    fontSize: 27,
+    fontWeight: "800",
+    marginBottom: 7,
+  },
+  reporteDescripcion: {
+    color: "#858d99",
+    fontSize: 13,
+    lineHeight: 19,
+    maxWidth: 340,
+  },
+  reporteMetaCard: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    marginBottom: 22,
+  },
+  reporteMetaFila: {
+    width: "100%",
+  },
+  reporteMetaBloque: {
+    width: "100%",
+  },
+  reporteMetaLabel: {
+    color: "#656d78",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    marginBottom: 5,
+  },
+  reporteMetaValor: {
+    color: "#d9dce1",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  reporteMetaSeparador: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#292e36",
+    marginVertical: 11,
+  },
+
+  reporteFormulario: {
+    width: "100%",
+  },
+  reporteCampoLabel: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 8,
+  },
+  reporteInputDetalle: {
+    width: "100%",
+    minHeight: 120,
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#303640",
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    paddingTop: 14,
+    paddingBottom: 14,
+    color: "#f1f2f4",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 22,
+  },
+  reporteFotoBoton: {
+    width: "100%",
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#303640",
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    marginBottom: 12,
+  },
+  reporteFotoMarca: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: "#211b15",
+    borderWidth: 1,
+    borderColor: "#49331d",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  reporteFotoMarcaTexto: {
+    color: "#f59e0b",
+    fontSize: 24,
+    fontWeight: "400",
+    marginTop: -2,
+  },
+  reporteFotoInfo: {
+    flex: 1,
+  },
+  reporteFotoTitulo: {
+    color: "#f1f2f4",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 3,
+  },
+  reporteFotoSubtitulo: {
+    color: "#69717d",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  reporteFotoFlecha: {
+    color: "#69717d",
+    fontSize: 28,
+    fontWeight: "300",
+    marginLeft: 8,
+  },
+  reportePreviewContenedor: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    padding: 8,
+    marginBottom: 16,
+  },
+  reporteAdjuntoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 5,
+    paddingTop: 9,
+    paddingBottom: 4,
+  },
+  reporteAdjuntoDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2ed573",
+    marginRight: 7,
+  },
+  reporteAdjuntoTexto: {
+    color: "#2ed573",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+  reporteEnviar: {
+    width: "100%",
+    height: 54,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f59e0b",
+    borderRadius: 14,
+    marginTop: 10,
+  },
+  reporteEnviarDeshabilitado: {
+    opacity: 0.55,
+  },
+  reporteEnviarTexto: {
+    color: "#11141a",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+  reporteEnviarFlecha: {
+    position: "absolute",
+    right: 18,
+    color: "#11141a",
+    fontSize: 28,
+    fontWeight: "400",
+    marginTop: -2,
+  },
+  reporteCancelar: {
+    width: "100%",
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 7,
+  },
+  reporteCancelarTexto: {
+    color: "#858d99",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  reporteFooter: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    marginTop: 13,
+  },
+
   /* ===== CHAT DE CANAL ===== */
   chatScreen: {
     flex: 1,
