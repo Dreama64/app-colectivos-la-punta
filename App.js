@@ -858,73 +858,122 @@ export default function App() {
     const totalUsuariosActivos = connectedUsers.length + 1;
 
     return (
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-          style={{ flex: 1, width: '100%' }}
-        >
-          <View style={styles.headerDisplay}>
-            <View style={styles.headerFilaSuperior}>
-              <Text style={styles.brandText}>Colectivos La Punta Chat • {canalActivo}</Text>
-              <TouchableOpacity onPress={salirDelCanal} style={styles.areaEngranaje}>
-                <Text style={styles.textoEngranaje}>🏠</Text>
-              </TouchableOpacity>
+      <SafeAreaView style={styles.chatScreen}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.chatKeyboard}>
+
+          <View style={styles.chatHeader}>
+            <View>
+              <Text style={styles.chatEyebrow}>COLECTIVOS LA PUNTA</Text>
+              <Text style={styles.chatBrand}>{canalActivo}</Text>
             </View>
-            <Text style={styles.choferTag}>Usuario: {nombreUsuarioCompleto}</Text>
 
-            {/* 🟢 PANEL DE PRESENCIA REAL */}
-            <TouchableOpacity 
-              style={styles.barraPresencia} 
-              onPress={() => setShowUsersPanel(!showUsersPanel)}
-            >
-              <Text style={styles.textoPresencia}>
-                🟢 {totalUsuariosActivos} {totalUsuariosActivos === 1 ? 'Usuario activo' : 'Usuarios activos'} en la frecuencia
-              </Text>
-              <Text style={{ color: '#888', fontSize: 11 }}>{showUsersPanel ? '▲ Ocultar' : '▼ Ver quiénes'}</Text>
+            <TouchableOpacity
+              style={styles.chatSalir}
+              activeOpacity={0.7}
+              onPress={salirDelCanal}>
+              <Text style={styles.chatSalirTexto}>SALIR</Text>
             </TouchableOpacity>
-
-            {showUsersPanel && (
-              <View style={styles.dropdownPresencia}>
-                <Text style={styles.itemUsuarioPresencia}>🛡️ {nombreUsuarioCompleto} (Tú)</Text>
-                {connectedUsers.map((u, idx) => (
-                  <Text key={u.id || idx} style={styles.itemUsuarioPresencia}>
-                    🛡️ {u.nombre || u.name}
-                  </Text>
-                ))}
-              </View>
-            )}
           </View>
 
-          <FlatList
-            ref={flatListRef}
-            data={mensajes}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItemMensaje}
-            style={styles.listaChatContainer}
-            contentContainerStyle={{ paddingVertical: 5 }}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          />
+          <View style={styles.chatDivider} />
 
-          <View style={styles.contenedorInputChat}>
+          <View style={styles.chatMeta}>
+            <View>
+              <Text style={styles.chatModoLabel}>CHAT DE CANAL</Text>
+              <Text style={styles.chatOperador}>Operador · {nombreUsuarioCompleto}</Text>
+            </View>
+            <View style={styles.chatOnlineBadge}>
+              <View style={styles.chatOnlineDot} />
+              <Text style={styles.chatOnlineTexto}>EN LÍNEA</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.chatPresencia}
+            activeOpacity={0.8}
+            onPress={() => setShowUsersPanel(!showUsersPanel)}>
+            <View style={styles.chatPresenciaIzquierda}>
+              <View style={styles.chatPresenciaDot} />
+              <View>
+                <Text style={styles.chatPresenciaTitulo}>
+                  {totalUsuariosActivos} {totalUsuariosActivos === 1 ? 'usuario activo' : 'usuarios activos'}
+                </Text>
+                <Text style={styles.chatPresenciaSubtitulo}>EN ESTE CANAL</Text>
+              </View>
+            </View>
+            <Text style={styles.chatPresenciaAccion}>
+              {showUsersPanel ? 'OCULTAR  ▲' : 'VER LISTA  ▼'}
+            </Text>
+          </TouchableOpacity>
+
+          {showUsersPanel && (
+            <View style={styles.chatUsuariosPanel}>
+              <View style={styles.chatUsuarioFila}>
+                <View style={styles.chatUsuarioDot} />
+                <Text style={styles.chatUsuarioNombre}>{nombreUsuarioCompleto}</Text>
+                <Text style={styles.chatUsuarioTu}>TÚ</Text>
+              </View>
+              {connectedUsers.map((u, idx) => (
+                <View key={u.id || idx} style={styles.chatUsuarioFila}>
+                  <View style={styles.chatUsuarioDot} />
+                  <Text style={styles.chatUsuarioNombre}>{u.nombre || u.name}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.chatConversacion}>
+            {mensajes.length === 0 && (
+              <View style={styles.chatVacio}>
+                <Text style={styles.chatVacioTitulo}>SIN MENSAJES</Text>
+                <Text style={styles.chatVacioTexto}>Inicia una conversación en {canalActivo}</Text>
+              </View>
+            )}
+
+            <FlatList
+              ref={flatListRef}
+              data={mensajes}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItemMensaje}
+              style={styles.listaChatContainer}
+              contentContainerStyle={styles.chatListaContenido}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            />
+          </View>
+
+          <View style={styles.chatInputFila}>
             <TextInput
-              style={styles.inputMensajeChat}
+              style={styles.chatInput}
               placeholder="Escribe un mensaje..."
-              placeholderTextColor="#888"
+              placeholderTextColor="#656d78"
               value={textoMensaje}
               onChangeText={setTextoMensaje}
               maxLength={100}
+              returnKeyType="send"
+              onSubmitEditing={enviarMensajeTexto}
             />
-            <TouchableOpacity style={styles.botonEnviarChat} onPress={enviarMensajeTexto}>
-              <Text style={{ fontSize: 18 }}>➡️</Text>
+            <TouchableOpacity
+              style={styles.chatEnviar}
+              activeOpacity={0.8}
+              onPress={enviarMensajeTexto}>
+              <Text style={styles.chatEnviarTexto}>›</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity 
-            style={[styles.botonHubMenu, { width: '100%', height: 46, borderRadius: 12, marginBottom: 10 }]} 
-            onPress={() => setPantallaActual('walkie')}
-          >
-            <Text style={{ fontSize: 14, color: '#ffffff', fontWeight: 'bold' }}>🎙️ Cambiar a Radio de este Canal</Text>
+          <TouchableOpacity
+            style={styles.chatCambiarModo}
+            activeOpacity={0.8}
+            onPress={() => setPantallaActual('walkie')}>
+            <View>
+              <Text style={styles.chatCambiarLabel}>CAMBIAR MODO</Text>
+              <Text style={styles.chatCambiarTitulo}>Radio PTT de este canal</Text>
+            </View>
+            <Text style={styles.chatCambiarFlecha}>›</Text>
           </TouchableOpacity>
+
+          <Text style={styles.chatFooterTexto}>LA PUNTA · COMUNICACIONES DE TERRENO</Text>
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
@@ -1540,6 +1589,276 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  /* ===== CHAT DE CANAL ===== */
+  chatScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+    paddingHorizontal: 22,
+    paddingBottom: 18,
+  },
+  chatKeyboard: {
+    flex: 1,
+    width: "100%",
+  },
+  chatHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  chatEyebrow: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  chatBrand: {
+    color: "#FACC15",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  chatSalir: {
+    borderWidth: 1,
+    borderColor: "#343a43",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  chatSalirTexto: {
+    color: "#aab0b9",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  chatDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 18,
+  },
+  chatMeta: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  chatModoLabel: {
+    color: "#FACC15",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.8,
+    marginBottom: 5,
+  },
+  chatOperador: {
+    color: "#8b929d",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chatOnlineBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#161b1b",
+    borderWidth: 1,
+    borderColor: "#26352d",
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  chatOnlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#2ed573",
+    marginRight: 6,
+  },
+  chatOnlineTexto: {
+    color: "#2ed573",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  chatPresencia: {
+    width: "100%",
+    minHeight: 60,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+  },
+  chatPresenciaIzquierda: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  chatPresenciaDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#2ed573",
+    marginRight: 11,
+  },
+  chatPresenciaTitulo: {
+    color: "#f1f2f4",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 3,
+  },
+  chatPresenciaSubtitulo: {
+    color: "#646c77",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  chatPresenciaAccion: {
+    color: "#8c939e",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+  chatUsuariosPanel: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 6,
+  },
+  chatUsuarioFila: {
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  chatUsuarioDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2ed573",
+    marginRight: 9,
+  },
+  chatUsuarioNombre: {
+    flex: 1,
+    color: "#cbd0d7",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chatUsuarioTu: {
+    color: "#FACC15",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  chatConversacion: {
+    flex: 1,
+    width: "100%",
+    marginTop: 10,
+    position: "relative",
+  },
+  chatListaContenido: {
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  chatVacio: {
+    position: "absolute",
+    top: "40%",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 0,
+  },
+  chatVacioTitulo: {
+    color: "#555d68",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 7,
+  },
+  chatVacioTexto: {
+    color: "#454c56",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chatInputFila: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 10,
+  },
+  chatInput: {
+    flex: 1,
+    height: 52,
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#303640",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    color: "#ffffff",
+    fontSize: 14,
+    marginRight: 9,
+  },
+  chatEnviar: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#FACC15",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  chatEnviarTexto: {
+    color: "#11141a",
+    fontSize: 30,
+    fontWeight: "500",
+    marginTop: -3,
+  },
+  chatCambiarModo: {
+    width: "100%",
+    minHeight: 62,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 17,
+    marginBottom: 11,
+  },
+  chatCambiarLabel: {
+    color: "#737b86",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  chatCambiarTitulo: {
+    color: "#f1f2f4",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  chatCambiarFlecha: {
+    color: "#69717d",
+    fontSize: 30,
+    fontWeight: "300",
+  },
+  chatFooterTexto: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    marginBottom: 14,
+  },
+
   /* ===== RADIO PTT ===== */
   radioScreen: {
     flex: 1,
@@ -2182,41 +2501,41 @@ const styles = StyleSheet.create({
     marginVertical: 4, 
   },
   burbujaChat: {
-    maxWidth: '80%',
-    borderRadius: 16,
+    maxWidth: "82%",
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   burbujaMia: {
-    backgroundColor: '#2d3446', 
-    borderBottomRightRadius: 2,
+    backgroundColor: "#24251f",
     borderWidth: 1,
-    borderColor: '#3a445a',
+    borderColor: "#4a4626",
+    borderBottomRightRadius: 4,
   },
   burbujaAjena: {
-    backgroundColor: '#1c2029',
-    borderBottomLeftRadius: 2,
+    backgroundColor: "#171a1f",
     borderWidth: 1,
-    borderColor: '#2d3446',
+    borderColor: "#292e36",
+    borderBottomLeftRadius: 4,
   },
   textoEmisorChat: {
-    color: '#2ed573',
-    fontSize: 11,
-    fontWeight: '700',
-    marginBottom: 3,
+    color: "#2ed573",
+    fontSize: 10,
+    fontWeight: "800",
+    marginBottom: 4,
   },
   textoMensajeChat: {
-    color: '#ffffff',
-    fontSize: 15,
+    color: "#f1f2f4",
+    fontSize: 14,
     lineHeight: 20,
   },
   textoHoraChat: {
-    color: '#a4b0be',
-    fontSize: 10,
-    alignSelf: 'flex-end',
-    marginTop: 4,
-    opacity: 0.8,
+    color: "#737b86",
+    fontSize: 9,
+    alignSelf: "flex-end",
+    marginTop: 5,
   },
+
   contenedorInputChat: {
     width: '100%',
     flexDirection: 'row',
