@@ -962,18 +962,32 @@ export default function App() {
     );
   }
 
-  // 🚀 PANTALLA DE CARGA / SPLASH MEJORADA (5 SEGUNDOS)
+  // 🚀 PANTALLA DE CARGA / SPLASH (5 SEGUNDOS)
   return (
     <View style={[styles.container, styles.centradoTotal]}>
-      <Text style={[styles.brandTitleText, { marginBottom: 10, fontSize: 26 }]}>
-        Colectivos La Punta
-      </Text>
-      <Text style={{ color: '#a4b0be', fontSize: 13, marginBottom: 30, letterSpacing: 1, textAlign: 'center' }}>
-        SISTEMA OPERATIVO DE CONTROL Y TERRENO
-      </Text>
-      <ActivityIndicator size="large" color="#2ed573" style={{ marginBottom: 15 }} />
-      <Text style={{ color: '#57606f', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 }}>
-        CONECTANDO CON SERVIDOR CENTRAL...
+      <Image
+        source={require("./assets/splash.png")}
+        style={{
+          width: "82%",
+          height: 330,
+          resizeMode: "contain",
+          marginBottom: 12
+        }}
+      />
+
+      <ActivityIndicator
+        size="small"
+        color="#d4af37"
+        style={{ marginBottom: 14 }}
+      />
+
+      <Text style={{
+        color: "#8d939d",
+        fontSize: 11,
+        fontWeight: "600",
+        letterSpacing: 1.5
+      }}>
+        CONECTANDO CON CENTRAL
       </Text>
     </View>
   );
