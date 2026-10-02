@@ -684,18 +684,45 @@ export default function App() {
 
   // 🎛️ PANTALLA 3: SELECTOR DE CANALES
   if (pantallaActual === 'selector_canal') {
-    return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
-        <View style={styles.tarjetaCentrada}>
-          <Text style={styles.tituloConfig}>Selecciona un Canal 🎛️</Text>
-          <Text style={styles.subtituloBienvenida}>
-            Modo seleccionado: {modoComunicacion === 'radio' ? '🎙️ Radio PTT' : '💬 Chat'}
-          </Text>
+    const esRadio = modoComunicacion === 'radio';
 
+    return (
+      <SafeAreaView style={styles.selectorScreen}>
+        <View style={styles.selectorHeader}>
+          <View>
+            <Text style={styles.selectorEyebrow}>COLECTIVOS LA PUNTA</Text>
+            <Text style={styles.selectorBrand}>Central Operativa</Text>
+          </View>
+          <View style={[
+            styles.selectorModoBadge,
+            esRadio ? styles.selectorModoRadio : styles.selectorModoChat
+          ]}>
+            <View style={[
+              styles.selectorModoDot,
+              esRadio ? styles.selectorModoDotRadio : styles.selectorModoDotChat
+            ]} />
+            <Text style={styles.selectorModoTexto}>
+              {esRadio ? 'RADIO PTT' : 'CHAT'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.selectorDivider} />
+
+        <View style={styles.selectorIntro}>
+          <Text style={styles.selectorLabel}>COMUNICACIONES</Text>
+          <Text style={styles.selectorTitulo}>Selecciona un canal</Text>
+          <Text style={styles.selectorDescripcion}>
+            Elige la frecuencia de trabajo para continuar.
+          </Text>
+        </View>
+
+        <View style={styles.selectorLista}>
           {CANALES_PREDEFINIDOS.map((canal, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.botonCanalItem}
+              style={styles.selectorCanal}
+              activeOpacity={0.8}
               onPress={() => {
                 setCanalActivo(canal);
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -708,21 +735,35 @@ export default function App() {
                 setPantallaActual(modoComunicacion === 'radio' ? 'walkie' : 'chat');
               }}
             >
-              <Text style={styles.textoBotonCanalItem}>🔹 {canal}</Text>
-              <Text style={styles.textoFlechaCanal}>▶</Text>
+              <View style={styles.selectorCanalNumero}>
+                <Text style={styles.selectorCanalNumeroTexto}>
+                  {String(index + 1).padStart(2, '0')}
+                </Text>
+              </View>
+              <View style={styles.selectorCanalInfo}>
+                <Text style={styles.selectorCanalNombre}>{canal}</Text>
+                <Text style={styles.selectorCanalEstado}>DISPONIBLE</Text>
+              </View>
+              <Text style={styles.selectorCanalFlecha}>›</Text>
             </TouchableOpacity>
           ))}
+        </View>
 
-          <TouchableOpacity 
-            style={[styles.botonVolver, { marginTop: 20 }]} 
+        <View style={styles.selectorFooter}>
+          <TouchableOpacity
+            style={styles.selectorVolver}
+            activeOpacity={0.7}
             onPress={() => setPantallaActual('hub')}
           >
-            <Text style={styles.textoBotonVolver}>Volver al Menú</Text>
+            <Text style={styles.selectorVolverFlecha}>‹</Text>
+            <Text style={styles.selectorVolverTexto}>Volver al panel</Text>
           </TouchableOpacity>
+          <Text style={styles.selectorFooterTexto}>LA PUNTA · SISTEMA DE TERRENO</Text>
         </View>
       </SafeAreaView>
     );
   }
+
 
   // 🚨 PANTALLA 4: GENERAR REPORTE
   if (pantallaActual === 'reportes') {
@@ -1632,6 +1673,175 @@ const styles = StyleSheet.create({
     color: '#a4b0be',
     marginTop: 2,
   },
+  /* ===== SELECTOR DE CANALES ===== */
+  selectorScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+    paddingHorizontal: 22,
+    paddingBottom: 22,
+  },
+  selectorHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  selectorEyebrow: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  selectorBrand: {
+    color: "#FACC15",
+    fontSize: 21,
+    fontWeight: "900",
+  },
+  selectorModoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  selectorModoRadio: {
+    backgroundColor: "#161b1b",
+    borderColor: "#26352d",
+  },
+  selectorModoChat: {
+    backgroundColor: "#181a20",
+    borderColor: "#343944",
+  },
+  selectorModoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  selectorModoDotRadio: {
+    backgroundColor: "#2ed573",
+  },
+  selectorModoDotChat: {
+    backgroundColor: "#FACC15",
+  },
+  selectorModoTexto: {
+    color: "#e8e9eb",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  selectorDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 20,
+  },
+  selectorIntro: {
+    width: "100%",
+    marginTop: 30,
+    marginBottom: 22,
+  },
+  selectorLabel: {
+    color: "#FACC15",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.8,
+    marginBottom: 7,
+  },
+  selectorTitulo: {
+    color: "#ffffff",
+    fontSize: 26,
+    fontWeight: "800",
+    marginBottom: 7,
+  },
+  selectorDescripcion: {
+    color: "#858d99",
+    fontSize: 13,
+  },
+  selectorLista: {
+    width: "100%",
+  },
+  selectorCanal: {
+    width: "100%",
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    marginBottom: 12,
+  },
+  selectorCanalNumero: {
+    width: 43,
+    height: 43,
+    borderRadius: 12,
+    backgroundColor: "#20242a",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  selectorCanalNumeroTexto: {
+    color: "#FACC15",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  selectorCanalInfo: {
+    flex: 1,
+  },
+  selectorCanalNombre: {
+    color: "#f5f6f7",
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  selectorCanalEstado: {
+    color: "#2ed573",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+  },
+  selectorCanalFlecha: {
+    color: "#69717d",
+    fontSize: 30,
+    fontWeight: "300",
+  },
+  selectorFooter: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  selectorVolver: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  selectorVolverFlecha: {
+    color: "#9ba2ad",
+    fontSize: 24,
+    marginRight: 8,
+  },
+  selectorVolverTexto: {
+    color: "#9ba2ad",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  selectorFooterTexto: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.7,
+    marginTop: 4,
+    marginBottom: 18,
+  },
+
   botonCanalItem: {
     width: '100%',
     flexDirection: 'row',
