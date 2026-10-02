@@ -93,11 +93,11 @@ export default function App() {
         conectarWebSocket(nombreLimpio);
         setPantallaActual('hub'); 
       } else {
-        setPantallaActual('registro');
+        setPantallaActual('hub');
       }
     } catch (error) {
       console.log('Error al leer la memoria:', error);
-      setPantallaActual('registro');
+      setPantallaActual('hub');
     }
   };
 
@@ -539,29 +539,55 @@ export default function App() {
   };
 
   // 📝 PANTALLA 1: REGISTRO
+  // 📝 PANTALLA 1: REGISTRO
   if (pantallaActual === 'registro') {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.tarjetaCentrada}>
-          <Text style={styles.tituloBienvenida}>¡Bienvenido! 👋</Text>
-          <Text style={styles.subtituloBienvenida}>Identifícate para ingresar al sistema de control</Text>
-          
+      <SafeAreaView style={styles.registroScreen}>
+        <View style={styles.registroHeader}>
+          <Text style={styles.registroEyebrow}>COLECTIVOS LA PUNTA</Text>
+          <View style={styles.registroLinea} />
+        </View>
+
+        <View style={styles.registroContenido}>
+          <Image
+            source={require("./assets/splash.png")}
+            style={styles.registroLogo}
+          />
+
+          <Text style={styles.registroLabel}>PRIMER ACCESO</Text>
+          <Text style={styles.registroTitulo}>Identifica al operador</Text>
+          <Text style={styles.registroDescripcion}>
+            Ingresa tu nombre o identificación para acceder al sistema de terreno.
+          </Text>
+
+          <Text style={styles.registroInputLabel}>NOMBRE / IDENTIFICACIÓN</Text>
           <TextInput
-            style={styles.entradaTexto}
-            placeholder="Ej. Guardia Juan Perez..."
-            placeholderTextColor="#888"
+            style={styles.registroInput}
+            placeholder="Ej. Juan Pérez"
+            placeholderTextColor="#656d78"
             value={nombreIngresado}
             onChangeText={setNombreIngresado}
             maxLength={25}
           />
 
-          <TouchableOpacity style={styles.botonVerde} onPress={manejarRegistro}>
-            <Text style={styles.textoBotonVerde}>Ingresar al Sistema</Text>
+          <TouchableOpacity
+            style={styles.registroBoton}
+            activeOpacity={0.8}
+            onPress={manejarRegistro}
+          >
+            <Text style={styles.registroBotonTexto}>INGRESAR AL SISTEMA</Text>
+            <Text style={styles.registroBotonFlecha}>›</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.registroFooter}>
+          <View style={styles.registroEstadoDot} />
+          <Text style={styles.registroFooterTexto}>SISTEMA DE TERRENO · LA PUNTA</Text>
         </View>
       </SafeAreaView>
     );
   }
+
 
   // 🧭 PANTALLA 2: MENÚ PRINCIPAL (HUB)
   if (pantallaActual === 'hub') {
@@ -1205,6 +1231,124 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.7,
     marginTop: 8,
+  },
+
+  /* ===== REGISTRO / PRIMER ACCESO ===== */
+  registroScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+    paddingHorizontal: 28,
+    paddingBottom: 28,
+  },
+  registroHeader: {
+    width: "100%",
+  },
+  registroEyebrow: {
+    color: "#7f8794",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 2.4,
+  },
+  registroLinea: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 18,
+  },
+  registroContenido: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingBottom: 25,
+  },
+  registroLogo: {
+    width: 105,
+    height: 105,
+    resizeMode: "contain",
+    alignSelf: "center",
+    marginBottom: 24,
+  },
+  registroLabel: {
+    color: "#FACC15",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 2.2,
+    marginBottom: 8,
+  },
+  registroTitulo: {
+    color: "#ffffff",
+    fontSize: 30,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  registroDescripcion: {
+    color: "#858d99",
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 32,
+    maxWidth: 330,
+  },
+  registroInputLabel: {
+    color: "#9ba2ad",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    marginBottom: 9,
+  },
+  registroInput: {
+    width: "100%",
+    height: 58,
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#303640",
+    borderRadius: 14,
+    paddingHorizontal: 17,
+    color: "#ffffff",
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  registroBoton: {
+    width: "100%",
+    height: 58,
+    backgroundColor: "#FACC15",
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+  },
+  registroBotonTexto: {
+    color: "#11141a",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  registroBotonFlecha: {
+    color: "#11141a",
+    fontSize: 29,
+    fontWeight: "400",
+  },
+  registroFooter: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 5,
+  },
+  registroEstadoDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2ed573",
+    marginRight: 8,
+  },
+  registroFooterTexto: {
+    color: "#4d535d",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.6,
   },
 
   tarjetaCentrada: {
