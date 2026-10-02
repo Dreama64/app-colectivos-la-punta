@@ -34,6 +34,7 @@ export default function App() {
   const [textoMensaje, setTextoMensaje] = useState('');
 
   const [isEditing, setIsEditing] = useState(false);
+  const [temaApp, setTemaApp] = useState('oscuro');
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [emisorActual, setEmisorActual] = useState('');
 
@@ -69,6 +70,7 @@ export default function App() {
     }, 5000);
     
     configurarAudioInicial();
+    cargarTemaApp();
 
     return () => {
       clearTimeout(timer);
@@ -82,6 +84,26 @@ export default function App() {
       cargarHistorialChat();
     }
   }, [canalActivo, pantallaActual]);
+
+  const cargarTemaApp = async () => {
+    try {
+      const temaGuardado = await AsyncStorage.getItem('tema_app');
+      if (temaGuardado === 'claro' || temaGuardado === 'oscuro') {
+        setTemaApp(temaGuardado);
+      }
+    } catch (error) {
+      console.log('Error al cargar tema:', error);
+    }
+  };
+
+  const cambiarTemaApp = async (nuevoTema) => {
+    try {
+      setTemaApp(nuevoTema);
+      await AsyncStorage.setItem('tema_app', nuevoTema);
+    } catch (error) {
+      console.log('Error al guardar tema:', error);
+    }
+  };
 
   const comprobarUsuario = async () => {
     try {
@@ -1030,60 +1052,150 @@ export default function App() {
   // ⚙️ PANTALLA 6: CONFIGURACIÓN
   if (pantallaActual === 'configuracion') {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.tarjetaCentrada}>
-          <Text style={styles.tituloConfig}>Configuración ⚙️</Text>
-          
-          <View style={styles.seccionInfoEdicion}>
-            <Text style={styles.textoInfoLabel}>Identificación del Operador</Text>
+      <SafeAreaView style={styles.configScreen}>
+        <ScrollView
+          style={styles.configScroll}
+          contentContainerStyle={styles.configScrollContenido}
+          showsVerticalScrollIndicator={false}>
+
+          <View style={styles.configHeader}>
+            <View>
+              <Text style={styles.configEyebrow}>COLECTIVOS LA PUNTA</Text>
+              <Text style={styles.configBrand}>Configuración</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.configSalir}
+              activeOpacity={0.7}
+              onPress={() => {
+                setIsEditing(false);
+                setPantallaActual('hub');
+              }}>
+              <Text style={styles.configSalirTexto}>SALIR</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          <View style={styles.configIntro}>
+            <Text style={styles.configTitulo}>Preferencias del sistema</Text>
+            <Text style={styles.configDescripcion}>
+              Administra tu identificación y la apariencia de la aplicación.
+            </Text>
+          </View>
+
+          <Text style={styles.configSeccionLabel}>OPERADOR</Text>
+          <View style={styles.configCard}>
+            <Text style={styles.configCampoLabel}>IDENTIFICACIÓN</Text>
+
             {isEditing ? (
               <TextInput
-                style={styles.entradaTextoEdicion}
+                style={styles.configNombreInput}
                 value={nuevoNombre}
                 onChangeText={setNuevoNombre}
                 maxLength={25}
-                placeholder="Nuevo nombre..."
-                placeholderTextColor="#888"
+                placeholder="Nuevo nombre o cargo..."
+                placeholderTextColor="#656d78"
               />
             ) : (
-              <Text style={styles.textoInfoValorNombre}>
-                {nombreUsuarioCompleto}
-              </Text>
+              <Text style={styles.configNombre}>{nombreUsuarioCompleto}</Text>
             )}
-            
-            <TouchableOpacity 
-              style={[styles.botonVerde, { height: 40, borderRadius: 10, marginTop: 5 }]}
-              onPress={isEditing ? guardarNuevoNombre : () => setIsEditing(true)}
-            >
-              <Text style={styles.textoBotonVerde}>
-                {isEditing ? 'Guardar Cambios' : 'Editar Nombre / Cargo'}
+
+            <TouchableOpacity
+              style={styles.configEditarBoton}
+              activeOpacity={0.8}
+              onPress={isEditing ? guardarNuevoNombre : () => setIsEditing(true)}>
+              <Text style={styles.configEditarTexto}>
+                {isEditing ? 'GUARDAR CAMBIOS' : 'EDITAR NOMBRE / CARGO'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.seccionInfo}>
-            <Text style={styles.textoInfoLabel}>Versión del Sistema</Text>
-            <Text style={styles.textoInfoValor}>Colectivos La Punta v1.0</Text>
+          <Text style={styles.configSeccionLabel}>APARIENCIA</Text>
+          <View style={styles.configCard}>
+            <View style={styles.configTemaCabecera}>
+              <View>
+                <Text style={styles.configTemaTitulo}>Tema de la interfaz</Text>
+                <Text style={styles.configTemaSubtitulo}>Selecciona la apariencia del sistema</Text>
+              </View>
+            </View>
+
+            <View style={styles.configTemaSelector}>
+              <TouchableOpacity
+                style={[
+                  styles.configTemaOpcion,
+                  temaApp === 'oscuro' && styles.configTemaOpcionActiva
+                ]}
+                activeOpacity={0.8}
+                onPress={() => cambiarTemaApp('oscuro')}>
+                <View style={[
+                  styles.configTemaIndicador,
+                  temaApp === 'oscuro' && styles.configTemaIndicadorActivo
+                ]} />
+                <Text style={[
+                  styles.configTemaTexto,
+                  temaApp === 'oscuro' && styles.configTemaTextoActivo
+                ]}>OSCURO</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.configTemaOpcion,
+                  temaApp === 'claro' && styles.configTemaOpcionActiva
+                ]}
+                activeOpacity={0.8}
+                onPress={() => cambiarTemaApp('claro')}>
+                <View style={[
+                  styles.configTemaIndicador,
+                  temaApp === 'claro' && styles.configTemaIndicadorActivo
+                ]} />
+                <Text style={[
+                  styles.configTemaTexto,
+                  temaApp === 'claro' && styles.configTemaTextoActivo
+                ]}>CLARO</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View style={styles.seccionInfo}>
-            <Text style={styles.textoInfoLabel}>Estado del Servidor</Text>
-            <Text style={styles.textoInfoValorCed}>🟢 Operativo (Cloud)</Text>
+          <Text style={styles.configSeccionLabel}>SISTEMA</Text>
+          <View style={styles.configSistemaCard}>
+            <View style={styles.configSistemaFila}>
+              <View>
+                <Text style={styles.configSistemaLabel}>VERSIÓN</Text>
+                <Text style={styles.configSistemaValor}>Colectivos La Punta v1.0</Text>
+              </View>
+            </View>
+
+            <View style={styles.configSistemaSeparador} />
+
+            <View style={styles.configSistemaFila}>
+              <View>
+                <Text style={styles.configSistemaLabel}>SERVIDOR</Text>
+                <Text style={styles.configSistemaValor}>Operativo · Cloud</Text>
+              </View>
+              <View style={styles.configOnlineBadge}>
+                <View style={styles.configOnlineDot} />
+                <Text style={styles.configOnlineTexto}>EN LÍNEA</Text>
+              </View>
+            </View>
           </View>
 
-          <TouchableOpacity 
-            style={[styles.botonVolver, { marginTop: 30 }]} 
+          <TouchableOpacity
+            style={styles.configVolver}
+            activeOpacity={0.8}
             onPress={() => {
               setIsEditing(false);
               setPantallaActual('hub');
-            }}
-          >
-            <Text style={styles.textoBotonVolver}>Volver al Menú Principal</Text>
+            }}>
+            <Text style={styles.configVolverTexto}>VOLVER AL PANEL PRINCIPAL</Text>
           </TouchableOpacity>
-        </View>
+
+          <Text style={styles.configFooter}>LA PUNTA · SISTEMA DE TERRENO</Text>
+        </ScrollView>
       </SafeAreaView>
     );
   }
+
 
   // 📻 PANTALLA 7: RADIO WALKIE-TALKIE
   if (pantallaActual === 'walkie') {
@@ -1637,6 +1749,268 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  /* ===== CONFIGURACIÓN ===== */
+  configScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+  },
+  configScroll: {
+    flex: 1,
+    width: "100%",
+  },
+  configScrollContenido: {
+    paddingHorizontal: 22,
+    paddingBottom: 34,
+  },
+  configHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  configEyebrow: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  configBrand: {
+    color: "#FACC15",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  configSalir: {
+    borderWidth: 1,
+    borderColor: "#343a43",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  configSalirTexto: {
+    color: "#aab0b9",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  configDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 18,
+  },
+  configIntro: {
+    width: "100%",
+    marginTop: 25,
+    marginBottom: 25,
+  },
+  configTitulo: {
+    color: "#ffffff",
+    fontSize: 26,
+    fontWeight: "800",
+    marginBottom: 7,
+  },
+  configDescripcion: {
+    color: "#858d99",
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  configSeccionLabel: {
+    color: "#656d78",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.6,
+    marginBottom: 8,
+    marginLeft: 2,
+  },
+  configCard: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    padding: 15,
+    marginBottom: 22,
+  },
+  configCampoLabel: {
+    color: "#656d78",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 7,
+  },
+  configNombre: {
+    color: "#f1f2f4",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 13,
+  },
+  configNombreInput: {
+    width: "100%",
+    height: 48,
+    backgroundColor: "#11141a",
+    borderWidth: 1,
+    borderColor: "#3a414b",
+    borderRadius: 11,
+    paddingHorizontal: 13,
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 11,
+  },
+  configEditarBoton: {
+    width: "100%",
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#3b3f31",
+    backgroundColor: "#1d1e18",
+    borderRadius: 10,
+  },
+  configEditarTexto: {
+    color: "#FACC15",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+
+  configTemaCabecera: {
+    width: "100%",
+    marginBottom: 14,
+  },
+  configTemaTitulo: {
+    color: "#f1f2f4",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  configTemaSubtitulo: {
+    color: "#6f7782",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  configTemaSelector: {
+    width: "100%",
+    flexDirection: "row",
+    backgroundColor: "#11141a",
+    borderRadius: 11,
+    padding: 4,
+  },
+  configTemaOpcion: {
+    flex: 1,
+    height: 42,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  configTemaOpcionActiva: {
+    backgroundColor: "#292b24",
+    borderWidth: 1,
+    borderColor: "#4b4729",
+  },
+  configTemaIndicador: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#555d68",
+    marginRight: 8,
+  },
+  configTemaIndicadorActivo: {
+    backgroundColor: "#FACC15",
+  },
+  configTemaTexto: {
+    color: "#6f7782",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  configTemaTextoActivo: {
+    color: "#FACC15",
+  },
+  configSistemaCard: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    marginBottom: 22,
+  },
+  configSistemaFila: {
+    width: "100%",
+    minHeight: 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  configSistemaLabel: {
+    color: "#656d78",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    marginBottom: 5,
+  },
+  configSistemaValor: {
+    color: "#d9dce1",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  configSistemaSeparador: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#292e36",
+    marginVertical: 8,
+  },
+  configOnlineBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#161b1b",
+    borderWidth: 1,
+    borderColor: "#26352d",
+    borderRadius: 16,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  configOnlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2ed573",
+    marginRight: 6,
+  },
+  configOnlineTexto: {
+    color: "#2ed573",
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  configVolver: {
+    width: "100%",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FACC15",
+    borderRadius: 13,
+  },
+  configVolverTexto: {
+    color: "#11141a",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  configFooter: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    marginTop: 18,
+  },
+
   /* ===== REGISTRO DE NOVEDADES ===== */
   reporteScreen: {
     flex: 1,
