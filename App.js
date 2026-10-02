@@ -115,11 +115,11 @@ export default function App() {
         conectarWebSocket(nombreLimpio);
         setPantallaActual('hub'); 
       } else {
-        setPantallaActual('hub');
+        setPantallaActual('registro');
       }
     } catch (error) {
       console.log('Error al leer la memoria:', error);
-      setPantallaActual('hub');
+      setPantallaActual('registro');
     }
   };
 
