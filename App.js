@@ -217,13 +217,6 @@ export default function App() {
     ws.current.onopen = () => {
       actualizarUI('📻 CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
       
-      if (ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({
-          type: 'join_channel',
-          emisor: nombreIdentificador,
-          sala: canalActivoRef.current
-        }));
-      }
     };
 
     ws.current.onclose = () => {
