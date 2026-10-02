@@ -566,56 +566,91 @@ export default function App() {
   // 🧭 PANTALLA 2: MENÚ PRINCIPAL (HUB)
   if (pantallaActual === 'hub') {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
-        <View style={styles.tarjetaCentrada}>
-          <Text style={styles.brandTitleText}>Colectivos La Punta</Text>
-          <Text style={styles.subtituloBienvenida}>Sistema Operativo para Control de Terreno</Text>
+      <SafeAreaView style={styles.hubScreen}>
+        <View style={styles.hubHeader}>
+          <View>
+            <Text style={styles.hubEyebrow}>CENTRAL OPERATIVA</Text>
+            <Text style={styles.hubBrand}>Colectivos La Punta</Text>
+          </View>
+          <View style={styles.hubEstado}>
+            <View style={styles.hubEstadoDot} />
+            <Text style={styles.hubEstadoTexto}>EN LÍNEA</Text>
+          </View>
+        </View>
 
-          <TouchableOpacity 
-            style={styles.botonHubMenu} 
+        <View style={styles.hubDivider} />
+
+        <View style={styles.hubIntro}>
+          <Text style={styles.hubSaludo}>Panel de comunicaciones</Text>
+          <Text style={styles.hubDescripcion}>Selecciona una función para comenzar</Text>
+        </View>
+
+        <View style={styles.hubActions}>
+          <TouchableOpacity
+            style={[styles.hubAction, styles.hubActionPrincipal]}
+            activeOpacity={0.8}
             onPress={() => {
               setModoComunicacion('radio');
               setPantallaActual('selector_canal');
             }}
           >
-            <Text style={styles.iconoHubMenu}>🎙️</Text>
-            <View style={styles.contenedorTextoHub}>
-              <Text style={styles.tituloBotonHub}>Radio Walkie-Talkie</Text>
-              <Text style={styles.descripcionBotonHub}>Transmisión de voz PTT en tiempo real</Text>
+            <View style={styles.hubIconBox}>
+              <Text style={styles.hubIcon}>🎙️</Text>
             </View>
+            <View style={styles.hubActionText}>
+              <Text style={styles.hubActionLabel}>RADIO</Text>
+              <Text style={styles.hubActionTitle}>Walkie-Talkie</Text>
+              <Text style={styles.hubActionDescription}>Comunicación PTT en tiempo real</Text>
+            </View>
+            <Text style={styles.hubArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.botonHubMenu, { marginTop: 12 }]} 
+          <TouchableOpacity
+            style={styles.hubAction}
+            activeOpacity={0.8}
             onPress={() => {
               setModoComunicacion('chat');
               setPantallaActual('selector_canal');
             }}
           >
-            <Text style={styles.iconoHubMenu}>💬</Text>
-            <View style={styles.contenedorTextoHub}>
-              <Text style={styles.tituloBotonHub}>Chat de Texto</Text>
-              <Text style={styles.descripcionBotonHub}>Mensajería escrita entre canales</Text>
+            <View style={styles.hubIconBox}>
+              <Text style={styles.hubIcon}>💬</Text>
             </View>
+            <View style={styles.hubActionText}>
+              <Text style={styles.hubActionLabel}>MENSAJERÍA</Text>
+              <Text style={styles.hubActionTitle}>Chat de canales</Text>
+              <Text style={styles.hubActionDescription}>Mensajes entre conductores y central</Text>
+            </View>
+            <Text style={styles.hubArrow}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.botonHubMenu, { marginTop: 12, borderColor: '#d97706', backgroundColor: '#1c1b17' }]} 
+          <TouchableOpacity
+            style={[styles.hubAction, styles.hubActionReporte]}
+            activeOpacity={0.8}
             onPress={() => setPantallaActual('reportes')}
           >
-            <Text style={styles.iconoHubMenu}>🚨</Text>
-            <View style={styles.contenedorTextoHub}>
-              <Text style={[styles.tituloBotonHub, { color: '#f59e0b' }]}>Generar Reporte</Text>
-              <Text style={styles.descripcionBotonHub}>Incidencias con foto y registro en central</Text>
+            <View style={[styles.hubIconBox, styles.hubIconBoxReporte]}>
+              <Text style={styles.hubIcon}>🚨</Text>
             </View>
+            <View style={styles.hubActionText}>
+              <Text style={[styles.hubActionLabel, { color: '#f59e0b' }]}>INCIDENCIAS</Text>
+              <Text style={styles.hubActionTitle}>Generar reporte</Text>
+              <Text style={styles.hubActionDescription}>Fotografías y novedades para central</Text>
+            </View>
+            <Text style={styles.hubArrow}>›</Text>
           </TouchableOpacity>
+        </View>
 
-          <TouchableOpacity 
-            style={[styles.botonVolver, { marginTop: 25 }]} 
+        <View style={styles.hubFooter}>
+          <TouchableOpacity
+            style={styles.hubSettings}
+            activeOpacity={0.7}
             onPress={() => setPantallaActual('configuracion')}
           >
-            <Text style={styles.textoBotonVolver}>Configuración ⚙️</Text>
+            <Text style={styles.hubSettingsIcon}>⚙️</Text>
+            <Text style={styles.hubSettingsText}>Configuración</Text>
           </TouchableOpacity>
+          <Text style={styles.hubVersion}>LA PUNTA · SISTEMA DE TERRENO</Text>
         </View>
       </SafeAreaView>
     );
@@ -1007,6 +1042,171 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /* ===== HUB PRINCIPAL ===== */
+  hubScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+    paddingHorizontal: 22,
+    paddingBottom: 22,
+  },
+  hubHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  hubEyebrow: {
+    color: "#7f8794",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 2.2,
+    marginBottom: 5,
+  },
+  hubBrand: {
+    color: "#FACC15",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  hubEstado: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#161b1b",
+    borderWidth: 1,
+    borderColor: "#26352d",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  hubEstadoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#2ed573",
+    marginRight: 6,
+  },
+  hubEstadoTexto: {
+    color: "#2ed573",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  hubDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 20,
+  },
+  hubIntro: {
+    width: "100%",
+    marginTop: 27,
+    marginBottom: 22,
+  },
+  hubSaludo: {
+    color: "#ffffff",
+    fontSize: 21,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  hubDescripcion: {
+    color: "#858d99",
+    fontSize: 13,
+  },
+  hubActions: {
+    width: "100%",
+  },
+  hubAction: {
+    width: "100%",
+    minHeight: 112,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 18,
+    paddingHorizontal: 17,
+    paddingVertical: 17,
+    marginBottom: 14,
+  },
+  hubActionPrincipal: {
+    borderColor: "#5a511e",
+    backgroundColor: "#1b1b18",
+  },
+  hubActionReporte: {
+    borderColor: "#49341d",
+  },
+  hubIconBox: {
+    width: 55,
+    height: 55,
+    borderRadius: 16,
+    backgroundColor: "#22262d",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
+  hubIconBoxReporte: {
+    backgroundColor: "#292117",
+  },
+  hubIcon: {
+    fontSize: 27,
+  },
+  hubActionText: {
+    flex: 1,
+  },
+  hubActionLabel: {
+    color: "#FACC15",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.7,
+    marginBottom: 4,
+  },
+  hubActionTitle: {
+    color: "#f5f6f7",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  hubActionDescription: {
+    color: "#858d99",
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  hubArrow: {
+    color: "#69717d",
+    fontSize: 32,
+    fontWeight: "300",
+    marginLeft: 8,
+  },
+  hubFooter: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 18,
+  },
+  hubSettings: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  hubSettingsIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  hubSettingsText: {
+    color: "#9ba2ad",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  hubVersion: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.7,
+    marginTop: 8,
+  },
+
   tarjetaCentrada: {
     width: "100%",
     backgroundColor: "#16181a",
