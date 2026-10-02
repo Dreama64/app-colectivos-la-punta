@@ -37,7 +37,7 @@ export default function App() {
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [emisorActual, setEmisorActual] = useState('');
 
-  const [statusText, setStatusText] = useState('📻 CENTRAL EN LÍNEA');
+  const [statusText, setStatusText] = useState('CENTRAL EN LÍNEA');
   const [statusColor, setStatusColor] = useState('#2ed573');
   const [subText, setSubText] = useState('PULSA PARA HABLAR');
   const [isButtonActive, setIsButtonActive] = useState(false);
@@ -215,7 +215,7 @@ export default function App() {
     ws.current = new WebSocket('wss://servidor-colectivos-la-punta.onrender.com');
 
     ws.current.onopen = () => {
-      actualizarUI('📻 CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+      actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
       
     };
 
@@ -341,7 +341,7 @@ export default function App() {
         { shouldPlay: false, volume: 1.0, playThroughEarpieceAndroid: false, shouldDuckAndroid: false },
         (playbackStatus) => {
           if (playbackStatus.didJustFinish) {
-            actualizarUI('📻 CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+            actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
             descargarSound();
             setEmisorActual('');
           }
@@ -441,7 +441,7 @@ export default function App() {
         },
       });
 
-      actualizarUI('📻 CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+      actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
     } catch (error) {
       actualizarUI('❌ ERROR AL ENVIAR', '#ff4757', 'FALLO DE RED');
     }
@@ -993,48 +993,78 @@ export default function App() {
     const totalUsuariosActivos = connectedUsers.length + 1;
 
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.headerDisplay}>
-          <View style={styles.headerFilaSuperior}>
-            <Text style={styles.brandText}>Colectivos La Punta • {canalActivo}</Text>
-            <TouchableOpacity onPress={salirDelCanal} style={styles.areaEngranaje}>
-              <Text style={styles.textoEngranaje}>🏠</Text>
-            </TouchableOpacity>
+      <SafeAreaView style={styles.radioScreen}>
+        <View style={styles.radioHeader}>
+          <View>
+            <Text style={styles.radioEyebrow}>COLECTIVOS LA PUNTA</Text>
+            <Text style={styles.radioBrand}>{canalActivo}</Text>
           </View>
-          
-          <Text style={styles.choferTag}>Usuario: {nombreUsuarioCompleto}</Text>
 
-          {/* 🟢 PANEL DE PRESENCIA REAL */}
-          <TouchableOpacity 
-            style={styles.barraPresencia} 
-            onPress={() => setShowUsersPanel(!showUsersPanel)}
+          <TouchableOpacity
+            style={styles.radioHome}
+            activeOpacity={0.7}
+            onPress={salirDelCanal}
           >
-            <Text style={styles.textoPresencia}>
-              🟢 {totalUsuariosActivos} {totalUsuariosActivos === 1 ? 'Usuario activo' : 'Usuarios activos'} en la frecuencia
-            </Text>
-            <Text style={{ color: '#888', fontSize: 11 }}>{showUsersPanel ? '▲ Ocultar' : '▼ Ver quiénes'}</Text>
+            <Text style={styles.radioHomeTexto}>SALIR</Text>
           </TouchableOpacity>
+        </View>
 
-          {showUsersPanel && (
-            <View style={styles.dropdownPresencia}>
-              <Text style={styles.itemUsuarioPresencia}>🛡️ {nombreUsuarioCompleto} (Tú)</Text>
-              {connectedUsers.map((u, idx) => (
-                <Text key={u.id || idx} style={styles.itemUsuarioPresencia}>
-                  🛡️ {u.nombre || u.name}
-                </Text>
-              ))}
-            </View>
-          )}
+        <View style={styles.radioDivider} />
 
-          <View style={styles.signalContainer}>
-            <View style={[styles.signalDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.estado, { color: statusColor }]}>
-              {emisorActual ? `🔊 DE: ${emisorActual}` : statusText}
-            </Text>
+        <View style={styles.radioMeta}>
+          <View>
+            <Text style={styles.radioModoLabel}>RADIO PTT</Text>
+            <Text style={styles.radioOperador}>Operador · {nombreUsuarioCompleto}</Text>
+          </View>
+          <View style={styles.radioOnlineBadge}>
+            <View style={styles.radioOnlineDot} />
+            <Text style={styles.radioOnlineTexto}>EN LÍNEA</Text>
           </View>
         </View>
 
-        <View style={styles.centerSpace}>
+        <TouchableOpacity
+          style={styles.radioPresencia}
+          activeOpacity={0.8}
+          onPress={() => setShowUsersPanel(!showUsersPanel)}
+        >
+          <View style={styles.radioPresenciaIzquierda}>
+            <View style={styles.radioPresenciaDot} />
+            <View>
+              <Text style={styles.radioPresenciaTitulo}>
+                {totalUsuariosActivos} {totalUsuariosActivos === 1 ? 'usuario activo' : 'usuarios activos'}
+              </Text>
+              <Text style={styles.radioPresenciaSubtitulo}>EN ESTA FRECUENCIA</Text>
+            </View>
+          </View>
+          <Text style={styles.radioPresenciaAccion}>
+            {showUsersPanel ? 'OCULTAR  ▲' : 'VER LISTA  ▼'}
+          </Text>
+        </TouchableOpacity>
+
+        {showUsersPanel && (
+          <View style={styles.radioUsuariosPanel}>
+            <View style={styles.radioUsuarioFila}>
+              <View style={styles.radioUsuarioDot} />
+              <Text style={styles.radioUsuarioNombre}>{nombreUsuarioCompleto}</Text>
+              <Text style={styles.radioUsuarioTu}>TÚ</Text>
+            </View>
+            {connectedUsers.map((u, idx) => (
+              <View key={u.id || idx} style={styles.radioUsuarioFila}>
+                <View style={styles.radioUsuarioDot} />
+                <Text style={styles.radioUsuarioNombre}>{u.nombre || u.name}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={styles.radioEstado}>
+          <View style={[styles.radioEstadoDot, { backgroundColor: statusColor }]} />
+          <Text style={[styles.radioEstadoTexto, { color: statusColor }]}>
+            {emisorActual ? `RECIBIENDO · ${emisorActual}` : statusText}
+          </Text>
+        </View>
+
+        <View style={styles.radioPTTArea}>
           <TouchableOpacity
             activeOpacity={0.8}
             onPressIn={iniciarTransmision}
@@ -1048,18 +1078,23 @@ export default function App() {
             <Text style={styles.btnText}>PTT</Text>
             <Text style={styles.subTexto}>{subText}</Text>
           </TouchableOpacity>
+
+          <Text style={styles.radioPTTHint}>MANTÉN PRESIONADO PARA TRANSMITIR</Text>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.botonHubMenu, { width: '100%', height: 46, borderRadius: 12, marginBottom: 10 }]} 
+        <TouchableOpacity
+          style={styles.radioCambiarModo}
+          activeOpacity={0.8}
           onPress={() => setPantallaActual('chat')}
         >
-          <Text style={{ fontSize: 14, color: '#ffffff', fontWeight: 'bold' }}>💬 Cambiar a Chat de este Canal</Text>
+          <View>
+            <Text style={styles.radioCambiarLabel}>CAMBIAR MODO</Text>
+            <Text style={styles.radioCambiarTitulo}>Chat de este canal</Text>
+          </View>
+          <Text style={styles.radioCambiarFlecha}>›</Text>
         </TouchableOpacity>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Mantén presionado para hablar • Colectivos La Punta</Text>
-        </View>
+        <Text style={styles.radioFooterTexto}>LA PUNTA · COMUNICACIONES DE TERRENO</Text>
       </SafeAreaView>
     );
   }
@@ -1505,6 +1540,242 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  /* ===== RADIO PTT ===== */
+  radioScreen: {
+    flex: 1,
+    backgroundColor: "#11141a",
+    paddingTop: Platform.OS === "ios" ? 48 : 34,
+    paddingHorizontal: 22,
+    paddingBottom: 26,
+  },
+  radioHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  radioEyebrow: {
+    color: "#7f8794",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  radioBrand: {
+    color: "#FACC15",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  radioHome: {
+    borderWidth: 1,
+    borderColor: "#343a43",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  radioHomeTexto: {
+    color: "#aab0b9",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  radioDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#252a31",
+    marginTop: 18,
+  },
+  radioMeta: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  radioModoLabel: {
+    color: "#FACC15",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.8,
+    marginBottom: 5,
+  },
+  radioOperador: {
+    color: "#8b929d",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  radioOnlineBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#161b1b",
+    borderWidth: 1,
+    borderColor: "#26352d",
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  radioOnlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#2ed573",
+    marginRight: 6,
+  },
+  radioOnlineTexto: {
+    color: "#2ed573",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  radioPresencia: {
+    width: "100%",
+    minHeight: 66,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+  },
+  radioPresenciaIzquierda: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  radioPresenciaDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#2ed573",
+    marginRight: 11,
+  },
+  radioPresenciaTitulo: {
+    color: "#f1f2f4",
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 3,
+  },
+  radioPresenciaSubtitulo: {
+    color: "#646c77",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+  radioPresenciaAccion: {
+    color: "#8c939e",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+  radioUsuariosPanel: {
+    width: "100%",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 6,
+  },
+  radioUsuarioFila: {
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  radioUsuarioDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2ed573",
+    marginRight: 9,
+  },
+  radioUsuarioNombre: {
+    flex: 1,
+    color: "#cbd0d7",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  radioUsuarioTu: {
+    color: "#FACC15",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  radioEstado: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 18,
+  },
+  radioEstadoDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 9,
+  },
+  radioEstadoTexto: {
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+    textAlign: "center",
+  },
+  radioPTTArea: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 245,
+  },
+  radioPTTHint: {
+    color: "#606873",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginTop: 18,
+  },
+  radioCambiarModo: {
+    width: "100%",
+    minHeight: 64,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#171a1f",
+    borderWidth: 1,
+    borderColor: "#292e36",
+    borderRadius: 14,
+    paddingHorizontal: 17,
+    marginBottom: 13,
+  },
+  radioCambiarLabel: {
+    color: "#737b86",
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  radioCambiarTitulo: {
+    color: "#f1f2f4",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  radioCambiarFlecha: {
+    color: "#69717d",
+    fontSize: 30,
+    fontWeight: "300",
+  },
+  radioFooterTexto: {
+    color: "#414751",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    marginBottom: 14,
+  },
+
   btnHablar: {
     width: 190,
     height: 190,
