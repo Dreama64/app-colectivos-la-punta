@@ -1,0 +1,13 @@
+apply plugin: "com.android.library"
+apply plugin: "expo-module-gradle-plugin"
+
+group = "com.tulinea.radio.background"
+version = "1.0.0"
+
+android {
+  namespace "com.tulinea.radio.background"
+  defaultConfig {
+    minSdkVersion 24
+    versionName "1.0.0"
+  }
+}

@@ -19,6 +19,7 @@ import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import ColectivosBackground from './modules/colectivos-background';
 
 const CANALES_PREDEFINIDOS = ['General', 'Canal 1', 'Canal 2', 'Canal 3'];
 
@@ -105,6 +106,15 @@ export default function App() {
     }
   };
 
+  const iniciarServicioBackground = () => {
+    try {
+      ColectivosBackground.start();
+      console.log("Servicio background iniciado");
+    } catch (error) {
+      console.log("Error al iniciar servicio background:", error);
+    }
+  };
+
   const comprobarUsuario = async () => {
     try {
       const usuarioGuardado = await AsyncStorage.getItem('nombre_chofer');
@@ -112,6 +122,7 @@ export default function App() {
         const nombreLimpio = usuarioGuardado.split(' #')[0];
         setNombreUsuarioCompleto(nombreLimpio);
         setNuevoNombre(nombreLimpio);
+        iniciarServicioBackground();
         conectarWebSocket(nombreLimpio);
         setPantallaActual('hub'); 
       } else {
@@ -163,7 +174,8 @@ export default function App() {
       await AsyncStorage.setItem('nombre_chofer', nombreLimpio);
       setNombreUsuarioCompleto(nombreLimpio);
       setNuevoNombre(nombreLimpio);
-      conectarWebSocket(nombreLimpio);
+      iniciarServicioBackground();
+        conectarWebSocket(nombreLimpio);
       setPantallaActual('hub');
     } catch (error) {
       console.log('Error al guardar en la memoria:', error);
