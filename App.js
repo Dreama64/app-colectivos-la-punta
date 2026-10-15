@@ -55,6 +55,8 @@ export default function App() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [temaApp, setTemaApp] = useState('oscuro');
+  const temaElegidoRef = useRef(false);
+  const guardadoTemaRef = useRef(Promise.resolve());
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [emisorActual, setEmisorActual] = useState('');
 
@@ -124,7 +126,8 @@ export default function App() {
   const cargarTemaApp = async () => {
     try {
       const temaGuardado = await AsyncStorage.getItem('tema_app');
-      if (temaGuardado === 'claro' || temaGuardado === 'oscuro') {
+      if (montadoRef.current && !temaElegidoRef.current &&
+          (temaGuardado === 'claro' || temaGuardado === 'oscuro')) {
         setTemaApp(temaGuardado);
       }
     } catch (error) {
@@ -133,12 +136,17 @@ export default function App() {
   };
 
   const cambiarTemaApp = async (nuevoTema) => {
-    try {
-      setTemaApp(nuevoTema);
-      await AsyncStorage.setItem('tema_app', nuevoTema);
-    } catch (error) {
+    if (nuevoTema !== 'claro' && nuevoTema !== 'oscuro') return;
+    temaElegidoRef.current = true;
+    setTemaApp(nuevoTema);
+    // Mantener el orden de escritura aunque se pulse varias veces seguidas.
+    guardadoTemaRef.current = guardadoTemaRef.current.then(() =>
+      AsyncStorage.setItem('tema_app', nuevoTema)
+    ).catch(error => {
       console.log('Error al guardar tema:', error);
-    }
+      Alert.alert('No se pudo guardar el tema', 'Vuelve a seleccionar el tema para conservarlo al abrir la app.');
+    });
+    await guardadoTemaRef.current;
   };
 
   const iniciarServicioBackground = () => {
@@ -663,6 +671,9 @@ export default function App() {
   };
 
   // 📝 PANTALLA 1: REGISTRO
+  // La demo aplica la preferencia al inicio y a Configuración.
+  const styles = temaApp === 'claro' ? estilosClaros : estilosOscuros;
+
   // 📝 PANTALLA 1: REGISTRO
   if (pantallaActual === 'registro') {
     return (
@@ -1445,7 +1456,7 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const estilosOscuros = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#11141a',
@@ -3373,3 +3384,33 @@ const styles = StyleSheet.create({
     marginRight: 5,
   }
 });
+// Solo colores de inicio/configuración; conservar tamaños, distribución y radio.
+const coloresClaros = {
+  '#11141a': '#f3f4f6', '#171a1f': '#ffffff', '#181a20': '#ffffff',
+  '#20242a': '#e5e7eb', '#22262d': '#e5e7eb', '#1c1e22': '#ffffff',
+  '#1b1b18': '#fffbeb', '#1d1e18': '#fffbeb', '#292b24': '#fef3c7',
+  '#161b1b': '#ecfdf5', '#292117': '#fff7ed',
+  '#252a31': '#d1d5db', '#292e36': '#d1d5db', '#343944': '#cbd5e1',
+  '#343a43': '#cbd5e1', '#3a414b': '#94a3b8', '#2e343d': '#cbd5e1',
+  '#26352d': '#a7f3d0', '#5a511e': '#d6b65c', '#49341d': '#fed7aa',
+  '#3b3f31': '#d6b65c', '#4b4729': '#b89b39',
+  '#ffffff': '#111827', '#f5f6f7': '#111827', '#f1f2f4': '#111827',
+  '#e8e9eb': '#374151', '#d9dce1': '#374151', '#aab0b9': '#475569',
+  '#858d99': '#475569', '#7f8794': '#475569', '#9ba2ad': '#475569',
+  '#69717d': '#4b5563', '#6f7782': '#4b5563', '#656d78': '#4b5563',
+  '#414751': '#64748b', '#facc15': '#854d0e', '#2ed573': '#15803d',
+};
+const estilosClaros = StyleSheet.create(Object.fromEntries(
+  Object.entries(estilosOscuros).map(([nombre, estilo]) => {
+    if (!/^(hub|config)/.test(nombre)) return [nombre, estilo];
+    const claro = { ...StyleSheet.flatten(estilo) };
+    for (const propiedad of ['color', 'backgroundColor', 'borderColor']) {
+      const color = claro[propiedad]?.toLowerCase();
+      if (coloresClaros[color]) claro[propiedad] = coloresClaros[color];
+    }
+    // Texto oscuro sobre el botón de acento, conservando su contraste.
+    if (nombre === 'configVolver') claro.backgroundColor = '#FACC15';
+    if (nombre === 'configVolverTexto') claro.color = '#11141a';
+    return [nombre, claro];
+  })
+));
