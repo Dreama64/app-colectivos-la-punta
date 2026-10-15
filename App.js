@@ -671,8 +671,9 @@ export default function App() {
   };
 
   // 📝 PANTALLA 1: REGISTRO
-  // La demo aplica la preferencia al inicio y a Configuración.
+  // Aplicar la preferencia a todas las pantallas sin cambiar su comportamiento.
   const styles = temaApp === 'claro' ? estilosClaros : estilosOscuros;
+  const colorTema = color => temaApp === 'claro' ? (coloresClaros[color.toLowerCase()] || color) : color;
 
   // 📝 PANTALLA 1: REGISTRO
   if (pantallaActual === 'registro') {
@@ -699,7 +700,7 @@ export default function App() {
           <TextInput
             style={styles.registroInput}
             placeholder="Ej. Juan Pérez"
-            placeholderTextColor="#656d78"
+            placeholderTextColor={colorTema('#656d78')}
             value={nombreIngresado}
             onChangeText={setNombreIngresado}
             maxLength={25}
@@ -794,7 +795,7 @@ export default function App() {
               <Text style={styles.hubIcon}>🚨</Text>
             </View>
             <View style={styles.hubActionText}>
-              <Text style={[styles.hubActionLabel, { color: '#f59e0b' }]}>INCIDENCIAS</Text>
+              <Text style={[styles.hubActionLabel, { color: colorTema('#f59e0b') }]}>INCIDENCIAS</Text>
               <Text style={styles.hubActionTitle}>Generar reporte</Text>
               <Text style={styles.hubActionDescription}>Fotografías y novedades para central</Text>
             </View>
@@ -961,7 +962,7 @@ export default function App() {
             <TextInput
               style={styles.reporteInputDetalle}
               placeholder="Describe brevemente lo ocurrido..."
-              placeholderTextColor="#656d78"
+              placeholderTextColor={colorTema('#656d78')}
               multiline={true}
               textAlignVertical="top"
               value={reportDescription}
@@ -1134,7 +1135,7 @@ export default function App() {
             <TextInput
               style={styles.chatInput}
               placeholder="Escribe un mensaje..."
-              placeholderTextColor="#656d78"
+              placeholderTextColor={colorTema('#656d78')}
               value={textoMensaje}
               onChangeText={setTextoMensaje}
               maxLength={100}
@@ -1212,7 +1213,7 @@ export default function App() {
                 onChangeText={setNuevoNombre}
                 maxLength={25}
                 placeholder="Nuevo nombre o cargo..."
-                placeholderTextColor="#656d78"
+                placeholderTextColor={colorTema('#656d78')}
               />
             ) : (
               <Text style={styles.configNombre}>{nombreUsuarioCompleto}</Text>
@@ -1384,8 +1385,8 @@ export default function App() {
         )}
 
         <View style={styles.radioEstado}>
-          <View style={[styles.radioEstadoDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.radioEstadoTexto, { color: statusColor }]}>
+          <View style={[styles.radioEstadoDot, { backgroundColor: colorTema(statusColor) }]} />
+          <Text style={[styles.radioEstadoTexto, { color: colorTema(statusColor) }]}>
             {emisorActual ? `RECIBIENDO · ${emisorActual}` : statusText}
           </Text>
         </View>
@@ -1440,12 +1441,12 @@ export default function App() {
 
       <ActivityIndicator
         size="small"
-        color="#d4af37"
+        color={colorTema('#d4af37')}
         style={{ marginBottom: 14 }}
       />
 
       <Text style={{
-        color: "#8d939d",
+        color: colorTema('#8d939d'),
         fontSize: 11,
         fontWeight: "600",
         letterSpacing: 1.5
@@ -3384,8 +3385,19 @@ const estilosOscuros = StyleSheet.create({
     marginRight: 5,
   }
 });
-// Solo colores de inicio/configuración; conservar tamaños, distribución y radio.
+// Solo colores: conservar distribución, dimensiones y estados de cada pantalla.
 const coloresClaros = {
+  '#141821': '#f8fafc', '#16181a': '#ffffff', '#1e2432': '#ffffff',
+  '#222f3e': '#fef3c7', '#211b15': '#fff7ed', '#24251f': '#fef9c3',
+  '#262c3a': '#cbd5e1', '#303640': '#cbd5e1', '#2d3446': '#cbd5e1',
+  '#2a2e33': '#cbd5e1', '#49331d': '#fed7aa', '#4a4626': '#d6b65c',
+  '#555d68': '#64748b', '#4d535d': '#64748b', '#57606f': '#475569',
+  '#cbd5e1': '#334155', '#8b929d': '#475569', '#646c77': '#475569',
+  '#8c939e': '#475569', '#cbd0d7': '#334155', '#454c56': '#64748b',
+  '#606873': '#64748b', '#737b86': '#475569', '#a4b0be': '#475569',
+  '#888': '#64748b', '#8d939d': '#475569', '#d4af37': '#854d0e',
+  '#f59e0b': '#92400e', '#eccc68': '#854d0e', '#ff4757': '#b91c1c',
+  '#ff6b81': '#be123c',
   '#11141a': '#f3f4f6', '#171a1f': '#ffffff', '#181a20': '#ffffff',
   '#20242a': '#e5e7eb', '#22262d': '#e5e7eb', '#1c1e22': '#ffffff',
   '#1b1b18': '#fffbeb', '#1d1e18': '#fffbeb', '#292b24': '#fef3c7',
@@ -3402,15 +3414,18 @@ const coloresClaros = {
 };
 const estilosClaros = StyleSheet.create(Object.fromEntries(
   Object.entries(estilosOscuros).map(([nombre, estilo]) => {
-    if (!/^(hub|config)/.test(nombre)) return [nombre, estilo];
     const claro = { ...StyleSheet.flatten(estilo) };
-    for (const propiedad of ['color', 'backgroundColor', 'borderColor']) {
+    for (const propiedad of ['color', 'backgroundColor', 'borderColor', 'borderBottomColor', 'borderLeftColor', 'shadowColor']) {
       const color = claro[propiedad]?.toLowerCase();
       if (coloresClaros[color]) claro[propiedad] = coloresClaros[color];
+      // Conservar contraste del texto oscuro sobre botones amarillos/naranjas.
+      if (propiedad === 'color' && color === '#11141a') claro[propiedad] = '#11141a';
+      if (propiedad === 'backgroundColor' && ['#facc15', '#f59e0b'].includes(color)) {
+        claro[propiedad] = estilo.backgroundColor;
+      }
     }
-    // Texto oscuro sobre el botón de acento, conservando su contraste.
-    if (nombre === 'configVolver') claro.backgroundColor = '#FACC15';
-    if (nombre === 'configVolverTexto') claro.color = '#11141a';
+    // El estado de transmisión conserva su señal roja sobre un fondo claro.
+    if (nombre === 'btnActive') claro.backgroundColor = '#fee2e2';
     return [nombre, claro];
   })
 ));

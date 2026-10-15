@@ -53,18 +53,64 @@ test('rapid selections serialize writes and a failed save can be retried', async
   await retry.cambiarTemaApp('claro'); assert.equal(retry.alerts.length, 1);
   fail = false; await retry.cambiarTemaApp('claro'); assert.equal(storage.get('tema_app'), 'claro');
 });
-test('light styles change hub/settings colors, preserve layout and all other styles', () => {
+test('light styles cover every screen and preserve all layout and state properties', () => {
   const styles = vm.runInNewContext(source.slice(source.indexOf('const estilosOscuros =')) + '\n({estilosOscuros, estilosClaros})', {
     StyleSheet: { create: value => value, flatten: value => value }, Platform: { OS: 'android' },
   });
   const dark = styles.estilosOscuros, light = styles.estilosClaros;
-  for (const name of ['hubScreen', 'configScreen']) assert.equal(light[name].backgroundColor, '#f3f4f6');
+  for (const name of ['hubScreen', 'configScreen', 'radioScreen', 'chatScreen', 'reporteScreen', 'selectorScreen', 'registroScreen', 'container']) assert.equal(light[name].backgroundColor, '#f3f4f6');
   assert.equal(light.configTemaTextoActivo.color, '#854d0e');
   for (const name of Object.keys(dark)) {
-    if (!/^(hub|config)/.test(name)) assert.deepEqual(light[name], dark[name]);
     for (const key of Object.keys(dark[name])) {
-      if (!['color', 'backgroundColor', 'borderColor'].includes(key)) assert.deepEqual(light[name][key], dark[name][key]);
+      if (!['color', 'backgroundColor', 'borderColor', 'borderBottomColor', 'borderLeftColor', 'shadowColor'].includes(key)) assert.deepEqual(light[name][key], dark[name][key]);
     }
   }
   assert.match(source, /const styles = temaApp === 'claro' \? estilosClaros : estilosOscuros/);
+});
+
+test('PTT states, chat bubbles, report inputs and accent buttons remain readable', () => {
+  const { estilosOscuros: dark, estilosClaros: light } = vm.runInNewContext(
+    source.slice(source.indexOf('const estilosOscuros =')) + '\n({estilosOscuros, estilosClaros})', {
+      StyleSheet: { create: value => value, flatten: value => value }, Platform: { OS: 'ios' },
+    });
+  const luminance = hex => {
+    const rgb = hex.slice(1).match(/../g).map(c => parseInt(c, 16) / 255)
+      .map(c => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+  };
+  const contrast = (fg, bg) => {
+    const a = luminance(fg), b = luminance(bg);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  };
+  for (const state of ['btnInactive', 'btnActive', 'btnListening']) {
+    for (const text of ['btnText', 'subTexto']) assert.ok(contrast(light[text].color, light[state].backgroundColor) >= 4.5, state + '/' + text);
+  }
+  assert.equal(light.btnActive.backgroundColor, '#fee2e2');
+  assert.notEqual(light.btnInactive.borderColor, light.btnListening.borderColor);
+  for (const bubble of ['burbujaMia', 'burbujaAjena']) {
+    for (const text of ['textoMensajeChat', 'textoHoraChat', 'textoEmisorChat']) {
+      assert.ok(contrast(light[text].color, light[bubble].backgroundColor) >= 4.5, bubble + '/' + text);
+    }
+  }
+  for (const input of ['registroInput', 'configNombreInput', 'chatInput', 'reporteInputDetalle']) {
+    assert.ok(contrast(light[input].color, light[input].backgroundColor) >= 4.5, input);
+  }
+  for (const [button, text] of [['registroBoton', 'registroBotonTexto'], ['configVolver', 'configVolverTexto'], ['reporteEnviar', 'reporteEnviarTexto'], ['chatEnviar', 'chatEnviarTexto']]) {
+    assert.equal(light[button].backgroundColor, dark[button].backgroundColor);
+    assert.ok(contrast(light[text].color, light[button].backgroundColor) >= 4.5, button);
+  }
+});
+
+test('inline theme colors adapt status and placeholders without changing their source state', () => {
+  const colors = vm.runInNewContext(source.slice(source.indexOf('const coloresClaros ='), source.indexOf('const estilosClaros =')) + '\ncoloresClaros');
+  const declaration = source.match(/const colorTema = .*;/)[0];
+  for (const temaApp of ['claro', 'oscuro']) {
+    const colorTema = vm.runInNewContext(declaration + '\ncolorTema', { temaApp, coloresClaros: colors });
+    for (const color of ['#2ed573', '#ff4757', '#a4b0be', '#eccc68', '#656d78', '#d4af37', '#8d939d']) {
+      assert.equal(colorTema(color), temaApp === 'claro' ? colors[color] : color);
+    }
+  }
+  assert.match(source, /backgroundColor: colorTema\(statusColor\)/);
+  assert.match(source, /color: colorTema\(statusColor\)/);
+  assert.equal(source.split("placeholderTextColor={colorTema('#656d78')}").length - 1, 4);
 });
