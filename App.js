@@ -21,6 +21,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import ColectivosBackground from './modules/colectivos-background';
 
+// Identidad de esta instalacion, independiente del nombre del operador.
+let clienteIdPromise;
+const obtenerClienteId = () => {
+  if (!clienteIdPromise) {
+    clienteIdPromise = (async () => {
+      let id = await AsyncStorage.getItem('@websocket_cliente_id');
+      if (!id) {
+        id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+        await AsyncStorage.setItem('@websocket_cliente_id', id);
+      }
+      return id;
+    })().catch(error => {
+      clienteIdPromise = null;
+      throw error;
+    });
+  }
+  return clienteIdPromise;
+};
+
 const CANALES_PREDEFINIDOS = ['General', 'Canal 1', 'Canal 2', 'Canal 3'];
 
 export default function App() {
@@ -54,17 +73,25 @@ export default function App() {
   const [connectedUsers, setConnectedUsers] = useState([]);
 
   const ws = useRef(null);
+  const montadoRef = useRef(false);
+  const reconexionRef = useRef(null);
+  const clienteIdRef = useRef(null);
+  const nombreRef = useRef('');
   const recordingRef = useRef(null);
   const soundRef = useRef(null); 
   const flatListRef = useRef(null);
 
   const canalActivoRef = useRef(canalActivo);
+  // Indica si el operador realmente debe permanecer dentro de un canal.
+  // Permite restaurarlo tras una reconexion sin reingresarlo si pulso SALIR.
+  const enCanalRef = useRef(false);
 
   useEffect(() => {
     canalActivoRef.current = canalActivo;
   }, [canalActivo]);
 
   useEffect(() => {
+    montadoRef.current = true;
     // ⏱️ Ajuste de tiempo del Splash inicial a 5 segundos
     const timer = setTimeout(() => {
       comprobarUsuario();
@@ -75,7 +102,15 @@ export default function App() {
 
     return () => {
       clearTimeout(timer);
-      if (ws.current) ws.current.close();
+      montadoRef.current = false;
+      clearTimeout(reconexionRef.current);
+      reconexionRef.current = null;
+      const socket = ws.current;
+      ws.current = null;
+      if (socket) {
+        socket.onopen = socket.onmessage = socket.onclose = socket.onerror = null;
+        socket.close();
+      }
       descargarSound();
     };
   }, []);
@@ -118,6 +153,7 @@ export default function App() {
   const comprobarUsuario = async () => {
     try {
       const usuarioGuardado = await AsyncStorage.getItem('nombre_chofer');
+      if (!montadoRef.current) return;
       if (usuarioGuardado) {
         const nombreLimpio = usuarioGuardado.split(' #')[0];
         setNombreUsuarioCompleto(nombreLimpio);
@@ -191,6 +227,7 @@ export default function App() {
       await AsyncStorage.setItem('nombre_chofer', nombreLimpio);
       setNombreUsuarioCompleto(nombreLimpio);
       setIsEditing(false);
+      nombreRef.current = nombreLimpio;
 
       if (ws.current) {
         ws.current.close();
@@ -222,6 +259,7 @@ export default function App() {
   };
 
   const salirDelCanal = () => {
+    enCanalRef.current = false;
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
         type: 'leave_channel',
@@ -235,7 +273,25 @@ export default function App() {
     setPantallaActual('hub');
   };
 
-  const conectarWebSocket = (nombreIdentificador) => {
+  const programarReconexion = () => {
+    if (!montadoRef.current || reconexionRef.current !== null) return;
+    reconexionRef.current = setTimeout(() => {
+      reconexionRef.current = null;
+      comprobarYReconectar();
+    }, 3000);
+  };
+
+  const conectarWebSocket = async (nombreIdentificador) => {
+    if (!montadoRef.current) return;
+    nombreRef.current = nombreIdentificador;
+    try {
+      clienteIdRef.current = await obtenerClienteId();
+    } catch (error) {
+      console.log('Error al cargar identidad de conexion:', error);
+      programarReconexion();
+      return;
+    }
+    if (!montadoRef.current) return;
 
         // Evitar conexiones WebSocket duplicadas
     if (
@@ -246,32 +302,58 @@ export default function App() {
       console.log('WebSocket ya activo o conectando. Se evita conexión duplicada.');
       return;
     }
-    ws.current = new WebSocket('wss://servidor-colectivos-la-punta.onrender.com');
+    clearTimeout(reconexionRef.current);
+    reconexionRef.current = null;
+    const socket = new WebSocket('wss://servidor-colectivos-la-punta.onrender.com');
+    ws.current = socket;
+    const esActual = () => montadoRef.current && ws.current === socket;
 
-    ws.current.onopen = () => {
+    socket.onopen = () => {
+      if (!esActual()) { socket.close(); return; }
+      if (enCanalRef.current) {
+        socket.send(JSON.stringify({
+          type: 'join_channel',
+          emisor: nombreRef.current,
+          clienteId: clienteIdRef.current,
+          sala: canalActivoRef.current
+        }));
+        console.log('Canal restaurado tras reconexion:', canalActivoRef.current);
+      }
       actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+
       
     };
 
-    ws.current.onclose = () => {
+    socket.onclose = (event) => {
+      if (!esActual()) return;
+      ws.current = null;
+      setConnectedUsers([]);
       actualizarUI('❌ DESCONECTADO', '#ff4757', 'SIN SEÑAL');
-      setTimeout(() => comprobarYReconectar(), 3000);
+      if (event.code !== 4001) programarReconexion();
     };
 
-    ws.current.onmessage = async (event) => {
+    socket.onerror = () => {
+      if (esActual()) socket.close();
+    };
+
+    socket.onmessage = async (event) => {
+      if (!esActual()) return;
       try {
         const data = JSON.parse(event.data);
 
         // 👥 1. PROCESAR LISTA DE USUARIOS CONECTADOS
         if (data.type === 'lista_usuarios' || data.tipo === 'lista_usuarios') {
+          if (!enCanalRef.current || data.sala !== canalActivoRef.current) return;
           const usuariosEnCanal = data.usuarios || [];
-          const otrosUsuarios = usuariosEnCanal.filter(u => u.nombre !== nombreIdentificador && u.nombre !== nombreUsuarioCompleto);
+          const otrosUsuarios = usuariosEnCanal.filter(u => u.clienteId
+            ? u.clienteId !== clienteIdRef.current
+            : u.nombre !== nombreRef.current);
           setConnectedUsers(otrosUsuarios);
           return;
         }
 
         // Filtro anti-eco
-        if (data.emisor === nombreIdentificador || data.emisor === nombreUsuarioCompleto) {
+        if (data.emisor === nombreRef.current) {
           return; 
         }
 
@@ -279,7 +361,7 @@ export default function App() {
 
         // 🎙️ 2. PROCESAR AUDIO
         if ((data.type === 'nuevo_audio' || data.tipo === 'nuevo_audio' || data.url) && data.url) {
-          if (salaRecibida !== canalActivoRef.current) {
+          if (!enCanalRef.current || salaRecibida !== canalActivoRef.current) {
             return; 
           }
           setEmisorActual(data.emisor || 'Compañero');
@@ -311,7 +393,7 @@ export default function App() {
   };
 
   const enviarMensajeTexto = () => {
-    if (textoMensaje.trim() === '' || !ws.current) return;
+    if (textoMensaje.trim() === '' || !enCanalRef.current || ws.current?.readyState !== WebSocket.OPEN) return;
 
     const ahora = new Date();
     const horaFormateada = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
@@ -335,8 +417,14 @@ export default function App() {
   };
 
   const comprobarYReconectar = async () => {
-    const usuarioActual = await AsyncStorage.getItem('nombre_chofer') || nombreUsuarioCompleto;
-    conectarWebSocket(usuarioActual);
+    if (!montadoRef.current) return;
+    try {
+      const usuarioActual = await AsyncStorage.getItem('nombre_chofer') || nombreRef.current;
+      if (montadoRef.current && usuarioActual) conectarWebSocket(usuarioActual);
+    } catch (error) {
+      console.log('Error al recuperar operador:', error);
+      programarReconexion();
+    }
   };
 
   const actualizarUI = (texto, color, secundario) => {
@@ -376,6 +464,7 @@ export default function App() {
         (playbackStatus) => {
           if (playbackStatus.didJustFinish) {
             actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+
             descargarSound();
             setEmisorActual('');
           }
@@ -476,6 +565,7 @@ export default function App() {
       });
 
       actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
+
     } catch (error) {
       actualizarUI('❌ ERROR AL ENVIAR', '#ff4757', 'FALLO DE RED');
     }
@@ -758,11 +848,15 @@ export default function App() {
               style={styles.selectorCanal}
               activeOpacity={0.8}
               onPress={() => {
+                canalActivoRef.current = canal;
+                enCanalRef.current = true;
                 setCanalActivo(canal);
+                setConnectedUsers([]);
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                   ws.current.send(JSON.stringify({
                     type: 'join_channel',
-                    emisor: nombreUsuarioCompleto,
+                    emisor: nombreRef.current,
+                    clienteId: clienteIdRef.current,
                     sala: canal
                   }));
                 }
