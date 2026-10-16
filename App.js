@@ -890,6 +890,7 @@ export default function App() {
             <Text style={styles.hubSettingsText}>Configuración</Text>
           </TouchableOpacity>
           <Text style={styles.hubVersion}>LA PUNTA · SISTEMA DE TERRENO</Text>
+          
         </View>
       </SafeAreaView>
     );
@@ -1692,11 +1693,11 @@ const estilosOscuros = StyleSheet.create({
     marginLeft: 8,
   },
   hubFooter: {
-    flex: 1,
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 18,
+    paddingBottom: 28,
   },
   hubSettings: {
     flexDirection: "row",
