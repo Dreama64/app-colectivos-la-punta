@@ -94,7 +94,10 @@ test('installation identity survives remount and rename; hub stays outside chann
   const id = first.sockets[0].sent[0].clienteId; first.unmount();
   storage.set('nombre_chofer', 'Andrés Cruz');
   const second = mount(storage); await second.comprobarYReconectar(); await flush(); second.sockets[0].open();
-  assert.equal(second.sockets[0].sent.length, 0);
+  assert.equal(second.sockets[0].sent.length, 1);
+  assert.equal(second.sockets[0].sent[0].type, 'registrar_usuario');
+  assert.equal(second.sockets[0].sent[0].clienteId, id);
+  assert.equal(second.sockets[0].sent[0].sala, undefined);
   second.enCanalRef.current = true; second.sockets[0].close();
   await second.runTimers(3000); second.sockets[1].open();
   assert.equal(second.sockets[1].sent[0].clienteId, id);
@@ -110,7 +113,9 @@ test('concurrent connects share one socket; reconnect restores channel once', as
   app.sockets[0].close(); await app.runTimers(3000); app.sockets[1].open();
   assert.equal(app.sockets[1].sent[0].clienteId, app.sockets[0].sent[0].clienteId);
   app.salirDelCanal(); app.sockets[1].close(); await app.runTimers(3000); app.sockets[2].open();
-  assert.equal(app.sockets[2].sent.length, 0); app.unmount();
+  assert.equal(app.sockets[2].sent.length, 1);
+  assert.equal(app.sockets[2].sent[0].type, 'registrar_usuario');
+  assert.equal(app.sockets[2].sent[0].sala, undefined); app.unmount();
 });
 test('stale callbacks and wrong-channel lists cannot change current presence', async () => {
   const app = mount(); app.enCanalRef.current = true;
@@ -195,4 +200,45 @@ test('real WebSocket handler serializes download/playback and logs reception bef
   assert.ok(logs.some(l => l.stage === 'ignored_echo'));
   assert.ok(logs.some(l => l.stage === 'ignored_channel'));
   app.unmount();
+});
+
+
+test('global presence receives snapshots in hub, updates independently, clears on close and ignores stale sockets', async () => {
+  const app = mount(); await app.conectarWebSocket('Juan Soto'); const socket = app.sockets[0]; socket.open();
+  const receive = (type, usuarios, sala) => socket.onmessage({ data: JSON.stringify({ type, usuarios, sala }) });
+  await receive('lista_usuarios_global', [{ nombre: 'Juan Soto', clienteId: socket.sent[0].clienteId, sala: null }, { nombre: 'Ana', clienteId: 'ana', sala: 'General' }]);
+  assert.equal(app.state.operadoresGlobales.length, 2);
+  assert.equal(app.state.operadoresGlobales[0].sala, null);
+  assert.equal(app.state.connectedUsers.length, 0);
+  app.enCanalRef.current = true;
+  await receive('lista_usuarios', [{ nombre: 'Ana', clienteId: 'ana' }], 'General');
+  await receive('lista_usuarios_global', [{ nombre: 'Ana', clienteId: 'ana', sala: 'Canal 1' }]);
+  assert.equal(app.state.connectedUsers.length, 1);
+  assert.equal(app.state.operadoresGlobales[0].sala, 'Canal 1');
+  await receive('lista_usuarios_global', null);
+  assert.equal(app.state.operadoresGlobales.length, 1);
+  await receive('lista_usuarios_global', []); assert.equal(app.state.operadoresGlobales.length, 0);
+  const stale = socket.onmessage; socket.close(); assert.equal(app.state.operadoresGlobales, null);
+  await app.runTimers(3000); app.sockets[1].open();
+  await stale({ data: JSON.stringify({ type: 'lista_usuarios_global', usuarios: [{ nombre: 'Ghost' }] }) });
+  assert.equal(app.state.operadoresGlobales, null);
+  app.unmount();
+});
+
+test('hub renders actual global block below report, including self, no channel, totals and empty/unavailable states', () => {
+  const source = fs.readFileSync(appFile, 'utf8');
+  const hub = source.slice(source.indexOf("  if (pantallaActual === 'hub')"), source.indexOf('// 🎛️ PANTALLA 3'));
+  const expression = hub.slice(hub.indexOf('<SafeAreaView'), hub.lastIndexOf('</SafeAreaView>') + '</SafeAreaView>'.length);
+  const code = require('@babel/core').transformSync(expression, { configFile: false, babelrc: false, plugins: [require.resolve('@babel/plugin-transform-react-jsx')] }).code;
+  const render = operadoresGlobales => {
+    const createElement = (tag, props, ...children) => ({ tag, props, children: children.flat(Infinity) });
+    const tree = vm.runInNewContext(code, { React: { createElement, Fragment: 'Fragment' }, SafeAreaView: 'SafeAreaView', View: 'View', Text: 'Text', ScrollView: 'ScrollView', TouchableOpacity: 'TouchableOpacity', styles: {}, colorTema: x => x, operadoresGlobales });
+    const flatten = node => typeof node === 'object' && node !== null ? node.children.map(flatten).join('') : (node ?? '');
+    return flatten(tree);
+  };
+  const text = render([{ nombre: 'Juan', clienteId: 'self', sala: null }, { nombre: 'Ana', clienteId: 'other', sala: 'General' }]);
+  assert.ok(text.indexOf('Generar reporte') < text.indexOf('Operadores conectados'));
+  assert.match(text, /Juan — Sin canal/); assert.match(text, /Ana — General/); assert.match(text, /2 conectados/);
+  assert.match(render([{ nombre: 'Ana', sala: 'Canal 1' }]), /1 conectado/);
+  assert.match(render([]), /Sin operadores conectados/); assert.match(render(null), /Presencia no disponible/);
 });

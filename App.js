@@ -75,6 +75,7 @@ export default function App() {
   // 🟢 ESTADO Y PANEL DE USUARIOS CONECTADOS
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
+  const [operadoresGlobales, setOperadoresGlobales] = useState(null);
 
   const ws = useRef(null);
   const montadoRef = useRef(false);
@@ -328,6 +329,9 @@ export default function App() {
       (ws.current.readyState === WebSocket.OPEN ||
        ws.current.readyState === WebSocket.CONNECTING)
     ) {
+      if (ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: 'registrar_usuario', emisor: nombreRef.current, clienteId: clienteIdRef.current }));
+      }
       console.log('WebSocket ya activo o conectando. Se evita conexión duplicada.');
       return;
     }
@@ -347,6 +351,8 @@ export default function App() {
           sala: canalActivoRef.current
         }));
         console.log('Canal restaurado tras reconexion:', canalActivoRef.current);
+      } else {
+        socket.send(JSON.stringify({ type: 'registrar_usuario', emisor: nombreRef.current, clienteId: clienteIdRef.current }));
       }
       actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
 
@@ -357,6 +363,7 @@ export default function App() {
       if (!esActual()) return;
       ws.current = null;
       setConnectedUsers([]);
+      setOperadoresGlobales(null);
       actualizarUI('❌ DESCONECTADO', '#ff4757', 'SIN SEÑAL');
       if (event.code !== 4001) programarReconexion();
     };
@@ -378,6 +385,11 @@ export default function App() {
           sala: data.sala || data.canal || data.room || 'General',
         } : null;
         if (ptt) registrarPtt('ws_receive', ptt);
+
+        if (data.type === 'lista_usuarios_global' && Array.isArray(data.usuarios)) {
+          setOperadoresGlobales(data.usuarios.filter(u => u && typeof u.nombre === 'string' && u.nombre.trim() && (u.sala == null || typeof u.sala === 'string')));
+          return;
+        }
 
         // 👥 1. PROCESAR LISTA DE USUARIOS CONECTADOS
         if (data.type === 'lista_usuarios' || data.tipo === 'lista_usuarios') {
@@ -793,7 +805,7 @@ export default function App() {
           <Text style={styles.hubDescripcion}>Selecciona una función para comenzar</Text>
         </View>
 
-        <View style={styles.hubActions}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.hubActions}>
           <TouchableOpacity
             style={[styles.hubAction, styles.hubActionPrincipal]}
             activeOpacity={0.8}
@@ -847,7 +859,26 @@ export default function App() {
             </View>
             <Text style={styles.hubArrow}>›</Text>
           </TouchableOpacity>
-        </View>
+          <View style={styles.operadoresPanel}>
+            <Text style={styles.operadoresTitulo}>Operadores conectados</Text>
+            {operadoresGlobales === null ? (
+              <Text style={styles.operadoresDetalle}>Presencia no disponible</Text>
+            ) : operadoresGlobales.length === 0 ? (
+              <Text style={styles.operadoresDetalle}>Sin operadores conectados</Text>
+            ) : (
+              <>
+                {operadoresGlobales.map((operador, indice) => (
+                  <Text key={operador.clienteId || indice} style={styles.operadoresNombre}>
+                    {operador.nombre} — {operador.sala || 'Sin canal'}
+                  </Text>
+                ))}
+                <Text style={styles.operadoresDetalle}>
+                  {operadoresGlobales.length} {operadoresGlobales.length === 1 ? 'conectado' : 'conectados'}
+                </Text>
+              </>
+            )}
+          </View>
+        </ScrollView>
 
         <View style={styles.hubFooter}>
           <TouchableOpacity
@@ -1591,6 +1622,13 @@ const estilosOscuros = StyleSheet.create({
   hubActions: {
     width: "100%",
   },
+  operadoresPanel: {
+    backgroundColor: '#171a1f', borderColor: '#292e36', borderWidth: 1,
+    borderRadius: 18, padding: 17, marginBottom: 14,
+  },
+  operadoresTitulo: { color: '#ffffff', fontSize: 15, fontWeight: '700', marginBottom: 8 },
+  operadoresNombre: { color: '#ffffff', fontSize: 13, marginBottom: 6 },
+  operadoresDetalle: { color: '#7f8794', fontSize: 12, marginTop: 4 },
   hubAction: {
     width: "100%",
     minHeight: 112,
