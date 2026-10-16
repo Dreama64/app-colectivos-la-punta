@@ -13,13 +13,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image
+  Image,
+  AppState
 } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import ColectivosBackground from './modules/colectivos-background';
+const { createPttQueue, playPtt } = require('./pttQueue');
 
 // Identidad de esta instalacion, independiente del nombre del operador.
 let clienteIdPromise;
@@ -81,6 +83,11 @@ export default function App() {
   const nombreRef = useRef('');
   const recordingRef = useRef(null);
   const soundRef = useRef(null); 
+  const cancelarReproduccionRef = useRef(null);
+  const finalizacionReproduccionRef = useRef(null);
+  const colaPttRef = useRef(null);
+  const secuenciaPttRef = useRef(0);
+  const sesionPttRef = useRef(Date.now().toString(36));
   const flatListRef = useRef(null);
 
   const canalActivoRef = useRef(canalActivo);
@@ -113,6 +120,7 @@ export default function App() {
         socket.onopen = socket.onmessage = socket.onclose = socket.onerror = null;
         socket.close();
       }
+      colaPttRef.current?.stop();
       descargarSound();
     };
   }, []);
@@ -256,6 +264,11 @@ export default function App() {
   };
 
   const descargarSound = async () => {
+    if (cancelarReproduccionRef.current) {
+      cancelarReproduccionRef.current();
+      await finalizacionReproduccionRef.current?.catch(() => {});
+      return;
+    }
     if (soundRef.current) {
       try {
         await soundRef.current.unloadAsync();
@@ -345,9 +358,18 @@ export default function App() {
     };
 
     socket.onmessage = async (event) => {
+      const receivedAt = Date.now();
       if (!esActual()) return;
       try {
         const data = JSON.parse(event.data);
+        const esAudio = (data.type === 'nuevo_audio' || data.tipo === 'nuevo_audio' || data.url) && data.url;
+        const ptt = esAudio ? {
+          diagnosticId: `${sesionPttRef.current}-${++secuenciaPttRef.current}`,
+          serverId: data.id ?? data.audioId ?? null,
+          receivedAt, url: data.url, emisor: data.emisor || 'Compañero',
+          sala: data.sala || data.canal || data.room || 'General',
+        } : null;
+        if (ptt) registrarPtt('ws_receive', ptt);
 
         // 👥 1. PROCESAR LISTA DE USUARIOS CONECTADOS
         if (data.type === 'lista_usuarios' || data.tipo === 'lista_usuarios') {
@@ -362,18 +384,22 @@ export default function App() {
 
         // Filtro anti-eco
         if (data.emisor === nombreRef.current) {
+          if (ptt) registrarPtt('ignored_echo', ptt);
           return; 
         }
 
         const salaRecibida = data.sala || data.canal || data.room || 'General';
 
         // 🎙️ 2. PROCESAR AUDIO
-        if ((data.type === 'nuevo_audio' || data.tipo === 'nuevo_audio' || data.url) && data.url) {
+        if (esAudio) {
           if (!enCanalRef.current || salaRecibida !== canalActivoRef.current) {
+            registrarPtt('ignored_channel', ptt);
             return; 
           }
-          setEmisorActual(data.emisor || 'Compañero');
-          await descargarYReproducirAudio(data.url);
+          if (!colaPttRef.current) {
+            colaPttRef.current = createPttQueue({ process: descargarYReproducirAudio, log: registrarPtt });
+          }
+          colaPttRef.current.enqueue(ptt);
           return;
         }
 
@@ -441,21 +467,39 @@ export default function App() {
     setSubText(secundario);
   };
 
-  const descargarYReproducirAudio = async (urlRemota) => {
+  const registrarPtt = (stage, item, extra = {}) => {
+    const now = Date.now();
+    console.log('[PTT]', JSON.stringify({
+      stage, at: new Date(now).toISOString(), epochMs: now,
+      diagnosticId: item.diagnosticId, serverId: item.serverId,
+      receivedAt: item.receivedAt, sinceReceiveMs: now - item.receivedAt,
+      url: item.url, sala: item.sala, appState: AppState.currentState, ...extra,
+    }));
+  };
+
+  const descargarYReproducirAudio = async (item) => {
+    const rutaLocal = `${FileSystem.cacheDirectory}ptt_${item.diagnosticId}.m4a`;
+    const vigente = () => montadoRef.current;
     try {
+      if (!vigente()) return;
+      setEmisorActual(item.emisor);
       actualizarUI('📥 DESCARGANDO AUDIO...', '#a4b0be', 'TRANSMISIÓN ENTRANTE');
-      
-      const nombreArchivo = `audio_${Date.now()}.m4a`;
-      const rutaLocal = `${FileSystem.cacheDirectory}${nombreArchivo}`;
-      const resultadoDescarga = await FileSystem.downloadAsync(urlRemota, rutaLocal);
-
-      const infoArchivo = await FileSystem.getInfoAsync(resultadoDescarga.uri);
-      if (!infoArchivo.exists) {
-        return;
+      registrarPtt('download_start', item);
+      let resultadoDescarga;
+      try {
+        resultadoDescarga = await FileSystem.downloadAsync(item.url, rutaLocal);
+        if (resultadoDescarga.status < 200 || resultadoDescarga.status >= 300) {
+          throw new Error(`HTTP ${resultadoDescarga.status}`);
+        }
+        const info = await FileSystem.getInfoAsync(resultadoDescarga.uri);
+        if (!info.exists || info.size === 0) throw new Error('Archivo de audio inexistente o vacío');
+        registrarPtt('download_end', item);
+      } catch (error) {
+        registrarPtt('download_error', item, { error: String(error) });
+        throw error;
       }
-
+      if (!vigente()) return;
       actualizarUI('🔊 ESCUCHANDO RUTA...', '#eccc68', 'TRANSMISIÓN ENTRANTE');
-
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
@@ -463,34 +507,28 @@ export default function App() {
         shouldDuckAndroid: false,
         staysActiveInBackground: true
       });
-
-      await descargarSound();
-
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: resultadoDescarga.uri },
-        { shouldPlay: false, volume: 1.0, playThroughEarpieceAndroid: false, shouldDuckAndroid: false },
-        (playbackStatus) => {
-          if (playbackStatus.didJustFinish) {
-            actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
-
-            descargarSound();
-            setEmisorActual('');
-          }
-        }
-      );
-
-      soundRef.current = sound;
-      await soundRef.current.setVolumeAsync(1.0);
-      await soundRef.current.setPositionAsync(0);
-      await soundRef.current.playAsync();
-
+      if (!vigente()) return;
+      const reproduccion = playPtt({
+        Audio, uri: resultadoDescarga.uri, item, log: registrarPtt,
+        onSound: (sound, cancel) => {
+          soundRef.current = sound;
+          cancelarReproduccionRef.current = cancel;
+          if (sound && !vigente()) cancel();
+        },
+      });
+      finalizacionReproduccionRef.current = reproduccion;
+      try { await reproduccion; }
+      finally { finalizacionReproduccionRef.current = null; }
+      if (vigente()) actualizarUI('CENTRAL EN LÍNEA', '#2ed573', 'PULSA PARA HABLAR');
     } catch (error) {
-      actualizarUI('⚠️ ERROR DE AUDIO', '#ff4757', 'PULSA PARA INTENTAR');
-      descargarSound();
-      setEmisorActual('');
+      if (vigente()) actualizarUI('⚠️ ERROR DE AUDIO', '#ff4757', 'PULSA PARA INTENTAR');
+      throw error;
+    } finally {
+      if (vigente()) setEmisorActual('');
+      try { await FileSystem.deleteAsync(rutaLocal, { idempotent: true }); }
+      catch (error) { registrarPtt('file_cleanup_error', item, { error: String(error) }); }
     }
   };
-
   const iniciarTransmision = async () => {
     try {
       Vibration.vibrate(80);
