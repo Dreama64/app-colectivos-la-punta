@@ -34,11 +34,11 @@ function mount(storage = new Map([['nombre_chofer', 'Juan Soto']]), overrides = 
     setTimeout(fn, delay) { const id = ++nextTimer; timers.set(id, { fn, delay }); return id; },
     clearTimeout: id => timers.delete(id),
     Audio: { requestPermissionsAsync: async () => {} },
-    ColectivosBackground: { start() {} },
+    ColectivosBackground: { start() {}, stop() {} },
     ...overrides,
   };
   const api = vm.runInNewContext(prelude + '\n(function(){' + body + `
-    return { conectarWebSocket, comprobarYReconectar, comprobarUsuario, salirDelCanal,
+    return { conectarWebSocket, comprobarYReconectar, comprobarUsuario, salirDelCanal, iniciarServicioBackground,
       ws, enCanalRef, canalActivoRef };
   })()`, sandbox);
   const cleanups = effects.map(effect => effect()).filter(Boolean);
@@ -51,6 +51,33 @@ function mount(storage = new Map([['nombre_chofer', 'Juan Soto']]), overrides = 
   };
 }
 const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+
+test('hub does not start radio service; channel exit and unmount stop it', async () => {
+  const events = [];
+  const app = mount(undefined, { ColectivosBackground: {
+    start() { events.push('start'); }, stop() { events.push('stop'); }
+  } });
+  await app.comprobarUsuario();
+  assert.deepEqual(events, []);
+  app.enCanalRef.current = true;
+  app.iniciarServicioBackground();
+  assert.deepEqual(events, ['start']);
+  app.salirDelCanal();
+  assert.deepEqual(events, ['start', 'stop']);
+  app.iniciarServicioBackground();
+  app.unmount();
+  assert.deepEqual(events, ['start', 'stop', 'start', 'stop']);
+});
+
+test('native service rejection leaves JS cleanup safe', () => {
+  const app = mount(undefined, { ColectivosBackground: {
+    start() { throw new Error('permission denied'); },
+    stop() { throw new Error('unavailable'); }
+  } });
+  assert.doesNotThrow(() => app.iniciarServicioBackground());
+  assert.doesNotThrow(() => app.salirDelCanal());
+  assert.doesNotThrow(() => app.unmount());
+});
 
 test('unmount must not create a live orphan connection three seconds later', async () => {
   const app = mount();

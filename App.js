@@ -121,6 +121,7 @@ export default function App() {
         socket.close();
       }
       colaPttRef.current?.stop();
+      detenerServicioBackground();
       descargarSound();
     };
   }, []);
@@ -166,6 +167,14 @@ export default function App() {
     }
   };
 
+  const detenerServicioBackground = () => {
+    try {
+      ColectivosBackground.stop();
+    } catch (error) {
+      console.log('[PTT-BG] stop_error', error);
+    }
+  };
+
   const comprobarUsuario = async () => {
     try {
       const usuarioGuardado = await AsyncStorage.getItem('nombre_chofer');
@@ -174,7 +183,6 @@ export default function App() {
         const nombreLimpio = usuarioGuardado.split(' #')[0];
         setNombreUsuarioCompleto(nombreLimpio);
         setNuevoNombre(nombreLimpio);
-        iniciarServicioBackground();
         conectarWebSocket(nombreLimpio);
         setPantallaActual('hub'); 
       } else {
@@ -226,7 +234,6 @@ export default function App() {
       await AsyncStorage.setItem('nombre_chofer', nombreLimpio);
       setNombreUsuarioCompleto(nombreLimpio);
       setNuevoNombre(nombreLimpio);
-      iniciarServicioBackground();
         conectarWebSocket(nombreLimpio);
       setPantallaActual('hub');
     } catch (error) {
@@ -281,6 +288,7 @@ export default function App() {
 
   const salirDelCanal = () => {
     enCanalRef.current = false;
+    detenerServicioBackground();
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
         type: 'leave_channel',
@@ -900,6 +908,7 @@ export default function App() {
               onPress={() => {
                 canalActivoRef.current = canal;
                 enCanalRef.current = true;
+                iniciarServicioBackground();
                 setCanalActivo(canal);
                 setConnectedUsers([]);
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
